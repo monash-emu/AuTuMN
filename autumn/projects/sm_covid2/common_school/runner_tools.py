@@ -26,7 +26,7 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
-from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_multiple_model_fits
+from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_model_fits
 from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import make_post_mc_plots
 
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
@@ -257,15 +257,12 @@ def run_full_analysis(
     if logger:
         logger.info("... optimisation completed")
     
-    # Keep only n_chains best solutions
-    loglikelihoods = [bcm.loglikelihood(**p) for p in best_params]
-    ll_cutoff = sorted(loglikelihoods, reverse=True)[run_config['n_chains'] - 1]
-
-    retained_init_points, retained_best_params = [], []
-    for init_sample, best_p, ll in zip(sample_as_dicts, best_params, loglikelihoods):
-        if ll >= ll_cutoff:
-            retained_init_points.append(init_sample)
-            retained_best_params.append(best_p)
+    # Keep only n_chains best solutions and plot optimised fits
+    best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
+    lle, results = best_outputs.extras, best_outputs.results
+    retained_indices = lle.sort_values("loglikelihood", ascending=False).index[0:run_config['n_chains']].to_list()    
+    retained_best_params = [best_params[i] for i in retained_indices]
+    retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
 
     # Store retained optimal solutions
     with open(out_path / "retained_best_params.yml", "w") as f:
@@ -275,7 +272,8 @@ def run_full_analysis(
     plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
 
     # Plot optimised model fits on a same figure
-    plot_multiple_model_fits(bcm, retained_best_params, out_path / "optimal_fits.png")
+    retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
+    plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
     
     # Early return if MCMC not requested
     if run_config['metropolis_draws'] == 0:

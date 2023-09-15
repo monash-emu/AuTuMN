@@ -172,12 +172,8 @@ def plot_model_fit_with_ll(bcm, params, outfile=None):
     return fig
 
 
-def plot_multiple_model_fits(bcm, params_list, outfile=None):
+def plot_model_fits(results_df, bcm, outfile=None):
     REF_DATE = datetime.date(2019,12,31)
-
-    n_samples = len(params_list)
-    cmap = plt.cm.get_cmap("plasma", n_samples)
-    colors = [cmap(i) for i in range(n_samples)]
 
     targets = {}
     for output in bcm.targets:
@@ -188,45 +184,21 @@ def plot_multiple_model_fits(bcm, params_list, outfile=None):
     fig, axs = plt.subplots(3, 1, figsize=(10, 10), height_ratios=(2., 1., 2.), sharex=True)
     death_ax, rp_ax, sero_ax = axs[0], axs[1], axs[2]
     
-    # set up the three axes
     death_ax.set_ylabel("COVID-19 deaths")   
-    rp_ax.set_ylabel("Random process")
+    results_df['infection_deaths_ma7'].plot(ax=death_ax)
+    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
 
+    rp_ax.set_ylabel("Random process")
+    results_df['transformed_random_process'].plot(ax=rp_ax)
+
+    # Sero data
+    output = "prop_ever_infected_age_matched" if "prop_ever_infected_age_matched" in targets else "prop_ever_infected"
+    results_df[output].plot(ax=sero_ax)
     if "prop_ever_infected_age_matched" in targets:
         sero_ax.set_ylabel("Prop. ever infected\n(age-matched)")
         targets["prop_ever_infected_age_matched"].plot(style='.', ax=sero_ax, zorder=20, color='black')
     else:
         sero_ax.set_ylabel("Prop. ever infected")
-
-    for i, params in enumerate(params_list):
-        run_model = bcm.run(params)
-        # ll = bcm.loglikelihood(**params)  # not ideal...
-        # rounded_ll = round(ll, 2)
-
-        # Deaths
-        death_ax.plot(
-            list(run_model.derived_outputs["infection_deaths_ma7"].index), 
-            run_model.derived_outputs["infection_deaths_ma7"],
-            label=f"search {i}",  #: ll={rounded_ll}",
-            color=colors[i]
-        )
-
-        # Random Process
-        rp_ax.plot(
-            list(run_model.derived_outputs["transformed_random_process"].index),
-            run_model.derived_outputs["transformed_random_process"],
-            color=colors[i]
-        )
-        
-        # Sero data
-        output = "prop_ever_infected_age_matched" if "prop_ever_infected_age_matched" in targets else "prop_ever_infected"
-        sero_ax.plot(
-            list(run_model.derived_outputs[output].index),
-            run_model.derived_outputs[output],
-            color=colors[i]
-        )
-
-    targets["infection_deaths_ma7"].plot(style='.', ax=death_ax, label="", zorder=20, color='black')
 
     # Post plotting processes
     # death

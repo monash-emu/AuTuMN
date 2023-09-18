@@ -272,7 +272,7 @@ def run_full_analysis(
     plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
 
     # Plot optimised model fits on a same figure
-    retained_results = results.T.loc[:, :, retained_indices].T  # double transpose to work with multi-index df rather than multi-level columns
+    retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
     plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
     
     # Early return if MCMC not requested

@@ -1,0 +1,184 @@
+\subsubsection{Parameter tables}
+The model parameters and their values (or associated prior distributions) are listed in Table \ref{param_table} and Table \ref{agespec_table}. The
+following sections include discussion of the evidence and reasoning used to inform the parameters.
+
+\renewcommand{\arraystretch}{1.3}
+\input{../../tex_descriptions/projects/sm_covid/param_table.tex} 
+
+\renewcommand{\arraystretch}{1.3}
+\input{../../tex_descriptions/projects/sm_covid/agespec_table.tex} 
+
+
+\subsubsection{Incubation period and active disease duration}
+A systematic review and meta-analysis was conducted in 2022 attempting to estimate the mean incubation period for 
+different SARS-CoV-2 variants \cite{wu2022}. Their pooled estimate for the mean incubation period for the wild-type 
+variant was 6.65 days (95\% CI 6.30-6.99), leveraging estimates from 119 individual studies \cite{wu2022}.
+The mean incubation period for the Delta variant was found to be 4.41 days (3.76-5.05). 
+The pooled estimate for the mean incubation period for the Omicron variant was 3.42 days (2.88-3.96). 
+These estimates are consistent with evidence from a rapid review that identified shortening of the serial interval of the 
+Delta variant compared to wild-type, and further shortening of the serial interval for the Omicron variant compared to the 
+Delta and wild-type variants \cite{madewell2023}.
+
+Active disease duration is difficult to estimate for a number of reasons. Observing the period of time over which transmission events
+occur from a primary case to their secondary cases can be biased towards shorter time periods due to interventions. Particularly 
+case isolation truncates the period at which secondary infections can occur. Proxies of infectiousness such as positive rapid 
+antigen positivity, PCR or viral culture may not perfectly reflect true infectiousness. Duration of live virus shedding by viable 
+viral culture is a better proxy indicator than PCR positivity and duration of live virus shedding is likely the best proxy coupled 
+with epidemiological evidence to indicate the upper limit for duration of infection based on observed secondary cases.
+In studies that recruited people infected in the community, the median duration of viable viral shedding has been shown to be 
+4-5 days from symptom onset for the ancestral/wild-type strain \cite{singanayagam2020, hakki2022}. This is coupled with evidence of 
+the possibility of transmission occurring 1-3 days prior to the onset of symptoms places the duration of infection at around 6-7 days 
+on average for the ancestral/wild-type strain \cite{he2020}. This is supported by evidence of the duration of variable virus 
+detectable in a small number of healthy young adults in a human challenge study being 6.5 days \cite{killingley2022}.
+
+
+\subsubsection{Times to hospitalisation and death / hospital stay duration}
+This section describes the evidence used to inform the statistical distributions listed in Table \ref{param_table}
+regarding times to disease outcomes (hospitalisation and death) and hospital stay duration.\\
+
+\textit{Time from symptom onset to hospitalisation}
+
+To inform the mean time from symptom onset to hospitalisation we used the estimate published in the March 2022 International Severe Acute Respiratory 
+and emerging Infections Consortium (ISARIC) Clinical Data Report \cite{isaric2022}. ISARIC developed a standardised reporting system to systematically 
+collect, analyse and report on COVID-19 clinical data over the pandemic. Since the start of the pandemic, they have collected clinical data on over 
+800,000 individuals across 60 countries. The published estimate provided in this latest dated report and used in our model represents the mean time 
+across all COVID-19 variants and so we believe it is the best representative estimate to use in this analysis, as we assumed this distribution is the 
+same across all SARS-CoV-2 variants modelled.\\
+
+\textit{Hospital stay duration}
+
+To inform the mean duration of hospital stay for COVID-19 cases we use the estimate published in the ISARIC Clinical Data Report published March 2022 \cite{isaric2022}. 
+The ISARIC data is briefly described above. The published estimate provided in this latest dated report and used in our model represents the mean time across all COVID-19 
+variants.\\
+
+\textit{Time from symptom onset to death}
+
+The mean time from symptom onset to death was informed by a systematic review and meta-analysis published in 2020 \cite{khalili2020}. This pooled estimation was based on three studies 
+that examined the clinical characteristics and outcomes of cases from early outbreaks in China, in 2020.
+
+
+\subsubsection{Vaccine efficacy (against wild-type virus)}
+\label{vacc_params}
+We aimed to generate an approximate average estimate for vaccine efficacy (VE) against the outcomes below, that best represents 
+the protection from two-doses of the most common vaccine types used globally. First, we were interested in the protection 
+of vaccines against the wild-type virus for parameterisation of our model, and we then considered the different strains' characteristics
+to determine how vaccine protection should be adjusted for the different viral strains (Section \ref{strain_params}). 
+We considered studies evaluating the efficacy of adenoviral vector vaccines (namely AZD1222/ChAdOx1 nCoV-19), the mRNA vaccines (BNT162b2 and mRNA-1273) and the 
+inactivated whole-virion vaccines (namely, Coronavac, BIBP-CorV and BBV152).\\
+
+\textit{Vaccine efficacy against infection}
+
+The results of ChAdOx1 nCoV-19 trial (adenoviral vector vaccine) demonstrated an efficacy against infection of 
+64.3\% (95\% CI, 56.1 to 71.0) \cite{falsey2021}. Whilst, data from the mRNA-1273 (mRNA vaccine) trial suggested a VE against infection 
+of 82\% (79.5-84.2) against any infection \cite{elsahly2021}. The BNT162b2 (mRNA vaccine) trial only evaluated the efficacy 
+against symptomatic infection, with a vaccine efficacy of 91.3\% (89.0-93.2) \cite{thomas2021}. This is similar to the VE of 
+mRNA-1273 against symptomatic infection and so we assume BNT162b2 likely has a similar VE against infection as mRNA-1273 \cite{elsahly2021, thomas2021}.
+Inactivated vaccine trials estimated a two-dose VE against infection of 68.8\% (46.7–82.5) (BBV152), 64.0\% (48.8-74.7) (BIBP-CorV, WIV04 strain) 
+and 73.5\% (60.6-82.2) (BIBP-CorV, HB02 strain) \cite{ella2021, alkaabi2021}. For Coronavac, clinical trials focused on VE against 
+symptomatic infection, with a VE of 83.5\% (65.4-92.1), which is similar to the VE against symptomatic infection seen for BBV152 and BIBP-CorV and 
+so we assume that Coronavac has a similar VE against infection \cite{tanriover2021, ella2021, alkaabi2021}.
+Combining this evidence suggests that 2-dose protection against infection ranges from approximately 60-80\% and so we assume that pooled effectiveness would fall in the mid-point 70\%.\\
+
+\textit{Vaccine efficacy against hospitalisation}
+
+This parameter represents the VE against hospitalisation once infected with the wild-type virus.
+The early trials for two doses (and one dose) of COVID-19 vaccines conducted in 2020 during wild-type circulation were either:
+1. Underpowered to precisely estimate the efficacy on the outcome of hospitalisation \cite{falsey2021, tanriover2021}.
+Or
+2. Evaluated efficacy against severe COVID-19 as a secondary end-point and not explicitly hospitalisation  \cite{elsahly2021, thomas2021, ella2021, alkaabi2021}.
+However, these trials still suggested that the vaccines significantly protect against hospitalisation and severe disease (a possible proxy of hospitalisation, with point-estimates ranging from 93-100\% efficacy \cite{falsey2021, tanriover2021, elsahly2021, thomas2021, ella2021, alkaabi2021}.
+
+Observational studies conducted slightly later in the pandemic, late 2020 into 2021 during periods where variants such as alpha, beta and gamma were circulating, but before the emergence 
+of the Delta variant, however, were able to estimate the VE against hospitalisation of 87\% (55-100) for BNT162b2 and 87.5\%
+(86.7–88.2) for Coronavac \cite{dagan2021, jara2021}. We assumed protection against hospitalisation is higher against the wild-type virus than these estimates against variants of concern 
+and so we assumed the modelled VE of 2-doses against hospitalisation is 90\% based on the combined evidence.\\
+
+\textit{Vaccine efficacy against death}
+
+This parameter represents the VE against death once infected with wild-type virus.
+The early vaccine trials were underpowered to precisely evaluate the outcome of death, however as discussed earlier some 
+demonstrated an effect on severe disease, which precedes COVID-19 death \cite{elsahly2021, thomas2021, ella2021, alkaabi2021}.
+
+An observational study in older adults (who have a greater risk death compared to younger ages) in the UK estimated a VE against death 
+for two doses of BNT162b2 of 69\% (31-86) following infection \cite{lopez2021}. In broader population studies estimated a VE of 
+84\% (44-100) following one dose of BNT162b2 and 86.3\% (84.5 to 87.9) following two doses of Coronavac \cite{dagan2021, jara2021}. 
+Furthermore, evaluation of VE against death in Scotland across a broad population following infection with the more severe delta variant estimated a 2-dose VE of 90\% (83-94) for BNT162b2 and 91\% (86-94) for AZD1222 \cite{sheikh2021}. 
+Therefore we assume that VE against death following infection with the wild-type virus as modelled in this analysis to be 90\% based on the combined evidence.
+
+\subsubsection{Variant-specific adjustments}
+\label{strain_params}
+\paragraph{Delta variant}
+
+\textit{Relative intrinsic transmissibility}\\
+Part of the Delta variant's transmission advantage is likely conferred by it being intrinsically more transmissible than prior circulating 
+variants. Estimating how much more intrinsically transmissible it is is difficult in practice because of additional properties around immune 
+evasion of both vaccination and prior infection derived immunity that also give the Delta variant a transmission advantage.
+
+Our assumption is that the relative intrinsic transmissibility as implemented in the model can be approximated by taking the ratio of the estimates 
+of $R_0$ for each variant. $R_0$ is increasingly difficult to estimate for new emerging variants such as the Delta variant due to accumulation of 
+population immunity through vaccination and infection. One study from an outbreak of the Delta variant in a relatively immune naive population 
+in Guangdong Province, China, estimated an R0 of 3.2 \cite{meng2021}. This is approximately 1.5 times that of wild-type estimates from early in the 
+pandemic, $R_0=2.2$ (95\% CI, 1.4 to 3.9) \cite{li2020}. 
+
+Other estimates of the relative effective reproduction number for the Delta variant compared to wild-type reports a two-fold increase in transmissibility \cite{campbell2021}. 
+However, this did not account for the immune escape advantage that Delta may have, so is still consistent with our assumptions.\\
+
+\textit{Relative intrinsic risk of hospitalisation}\\
+A large population-level cohort study in Ontario, Canada found that the adjusted odds of hospitalisation following infection with the Delta variant were 2.08 (1.78-2.40) that of 
+wild-type virus infections \cite{fisman2021}. We used the approach set out in \cite{zhang1998} to crudely convert the point-estimate of the adjusted odds ratio to an approximate estimate 
+of the relative risk of 2 in the model.\\
+
+\textit{Relative intrinsic risk of death}\\
+The same cohort study conducted in Ontario found that the adjusted odds of death following infection with the Delta variant were 2.33 (1.54-3.31) that of wild-type virus infections \cite{fisman2021}. 
+Employing the same conversion approach as mentioned in the previous paragraph, we used a relative risk of 2.3 in the model.\\
+
+\textit{Immune escape property}\\
+Part of the Delta variant's transmission advantage is likely conferred by its ability to evade vaccine-induced immunity. 
+In particular there is evidence for reduced activity in immune correlates for protection against infection, such as neutralising 
+antibody titres \cite{perezthen2022}. However, it is less clear how this translates into VE against infection. One population level 
+observational study in the UK estimated two doses of either an mRNA or adenoviral vector vaccine at being approximately 10\% less effective 
+at preventing symptomatic COVID-19 infection for the Delta variant compared to the Alpha variant \cite{lopezbernal2021}. 
+However in highly-vaccinated populations this is likely an estimate of the combined effect that includes the protection of the vaccine 
+against onward transmission in infected, which we do not capture in this model. 
+The best estimate we have found for VE against Delta variant infection from unvaccinated source, comes a Danish household transmission study and estimates a VE of 46\% (40-52) for two doses of an 
+mRNA or adenoviral vector vaccine \cite{lyngse2022c}. 
+Similarly, a household transmission study in Norway estimated the VE against infection for 
+2-dose-mRNA-vaccinated individuals following contact with a Delta household contact was 42\% (23-55) \cite{jalili2022}. 
+These estimates are about 60-66\% of our assumed modelled VE of 70\% based on prior evidence from vaccine trials (Section \ref{vacc_params}). 
+Given the uncertainty we assume a conservative estimate that the Delta variant is able to escape 30\% of prior vaccine immunity against infection.
+
+\paragraph{Omicron variant}
+
+\textit{Relative intrinsic transmissibility}\\
+As we described above for the Delta variant, the Omicron variant likely has a combined transmission advantage due to increased intrinsic transmissibility and its ability to evade prior immunity from infection and vaccination. 
+$R_0$ estimates for the Omicron variant are very difficult due to the high levels of population immunity from infection and vaccination in nearly every setting at the time of its emergence. 
+However, estimates of the risk of infection in unvaccinated close contacts of individuals infected with the Omicron variant compared to other variants should 
+also allow us to estimate the change in relative intrinsic transmissibility. These estimates largely only exist comparing the first Omicron subvariant BA.1 
+against the Delta variant and do not exist relative to the wild-type variant. 
+We can, however, consider the product of our relative intrinsic transmissibility for the Delta variant compared to wild-type and our estimate of the relative 
+intrinsic transmissibility for the Omicron variant compared to Delta. A household transmission study in Norway found that unvaccinated household contacts of 
+primary cases infected with Omicron BA.1 had a risk of being infected that is 1.27 times that of unvaccinated household contacts of a Delta infected primary 
+case \cite{jalili2022}. However, susceptibility is just one component of transmissibility as infectiousness also plays a role. 
+The same study estimated that household close contacts of unvaccinated Omicron BA.1 primary cases had a relative risk of being infected 1.5 times that of 
+households close contacts of unvaccinated Delta primary cases \cite{jalili2022}. This suggests that the Omicron BA.1 variant was between 1.2-1.5 times as 
+transmissible as the Delta variant in unvaccinated individuals. Therefore, in this model we assumed the modelled Omicron variant is 2 times 
+(1.3, (mid-point of 1.2-1.5) multiplied by 1.5 (the relative intrinsic transmissibility of the Delta variant)) as intrinsically transmissible as the wild-type virus.\\
+
+\textit{Relative intrinsic risk of hospitalisation}\\
+We could not find clear estimates of the relative intrinsic risk of hospitalisation for Omicron variant infection compared to the wild-type virus. However, we could find estimates 
+for the relative risk of Omicron compared to Delta and thus can use the product of this estimate with our estimate of the relative risk of hospitalisation 
+with the Delta variant compared to the wild-type virus. A large population-level study in England found an adjusted hazard ratio for hospitalisation of 0.41 (0.39-0.43) for infection 
+with the Omicron variant compared to the Delta variant \cite{nyberg2022}. We assumed that the hazard ratio can be used to estimate the relative risk and thus our 
+estimate for the relative intrinsic risk of hospitalisation for Omicron variant infection compared to the wild-type was 0.82 ($0.41\times2$).\\
+
+\textit{Relative intrinsic risk of death}\\
+To estimate the relative risk of death for Omicron compared to wild-type virus, we used the same approach as described above for relative risk intrinsic risk of hospitalisation.
+We leveraged estimates relative to the Delta variant to find an approximate estimate for this parameter in the model.
+A large population-level study in England found an adjusted hazard ratio for hospitalisation of 0.31 (0.26-0.37) for infection with the Omicron variant compared to the Delta variant \cite{nyberg2022}. 
+We assumed that the hazard ratio can be used to estimate the relative risk and thus our estimate for the relative intrinsic risk of hospitalisation for Omicron variant infection compared to the wild-type is 0.71 ($0.31 \times 2.3$).\\
+
+\textit{Immune escape property}\\
+In vitro neutralisation studies leveraging sera from vaccinated individuals demonstrated substantial immune escape of Omicron BA.1 compared to the Delta variant \cite{willett2022}. 
+The best estimate of VE against infection we could find was from a household transmission study in Norway which estimated a VE against infection with the Omicron variant of 27\% (6-49) for 2-dose-vaccinated 
+individuals \cite{jalili2022}. This is about 65\% of their estimated VE against the Delta variant and about 38\% of our modelled VE for the wild-type virus of 70\% \cite{jalili2022}. We therefore assumed that 
+the Omicron variant in the model is able to escape 60\% of vaccine immunity.

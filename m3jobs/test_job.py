@@ -1,5 +1,8 @@
+print("start imports")
 from autumn.projects.sm_covid2.common_school.runner_tools import run_full_analysis, TEST_RUN_CONFIG, DEFAULT_RUN_CONFIG
 from pathlib import Path
+
+print("finish imports")
 
 run_name = "this_is_a_test_job"
 this_dir_path = Path(__file__).resolve().parent

@@ -45,9 +45,8 @@
 
 # Command to run a openmp job
 # Set OMP_NUM_THREADS to the same value as: --cpus-per-task=12
-source ../../miniconda/bin/activate
+source /home/dshipman/sh30/users/rragonnet/miniconda/bin/activate
 conda activate summer2
+cd /home/rragonnet/sh30/users/rragonnet/AuTuMN
 
-python test_job.py
-
-
+python m3jobs/test_job.py

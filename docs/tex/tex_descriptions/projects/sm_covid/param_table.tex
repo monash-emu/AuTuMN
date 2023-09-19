@@ -1,47 +1,37 @@
-
-
-
 \begin{table}
-   \begin{tikzpicture}[overlay,remember picture]
-      \node [yshift=-30ex,rotate=45] at ( $(pic cs:A) !.5! (pic cs:B)$ ){ \fontsize{30} 
-            {6}\selectfont\textbf{\color{black!40}DRAFT ONLY} };
-      \end{tikzpicture}
 \centering
 \caption{Model parameters}
 \label{param_table}
 \resizebox{\textwidth}{!}{\begin{tabular}{lll}
 \toprule
-                                                    Parameter &                       Value/Distribution &                                                           Evidence \\
+                                                    Parameter &           Value/Distribution &                                                        Evidence \\
 \midrule
-                  Transmission probability per contact \textsuperscript{C} &                      Uniform (0.01, 0.1) &                                                                  - \\
-                            Mean active disease period (days) &                                      8.0 &                                                            assumed \\
-               Country-specific IFR multiplier ($m_C$) \textsuperscript{C} &                       Uniform (0.5, 1.5) &                                                                  - \\
-    Uncertainty multiplier for school contacts ($m_S$) \textsuperscript{C} &                       Uniform (0.8, 1.2) &                                                            assumed \\
-Prop. students on-site during “Partially open” periods \textsuperscript{C} &                       Uniform (0.1, 0.3) &                                                            assumed \\
-                                         VE against infection &                                      0.5 &                                                            assumed \\
-                                   VE against hospitalisation &                                      0.9 &                                                            assumed \\
-                                             VE against death &                                      0.9 &                                                            assumed \\
-            Time from symptom onset to hospitalisation (days) &                Gamma (shape=5, mean=7.7) &   ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020) \\
-                                Hospital stay duration (days) &               Gamma (shape=5, mean=12.8) &   ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020) \\
-                      Time from symptom onset to death (days) &             Gamma (shape=10, mean=15.93) & Malahat Khalili et al. . https://doi.org/10.1017/S0950268820001430 \\
-                   \textbf{Strain-specific parameters} &                                          &                                                                    \\
-                             \quad \textit{Wild-type strain} &                                          &                                                                    \\
-                                          Infection seed time & Calibrated, with country-specific priors &      Varied between 1 Jan 2020 and first date with reported deaths \\
-                                Mean incubation period (days) &                                     6.65 &                   Wu et al. doi:10.1001/jamanetworkopen.2022.28008 \\
-                                \quad \textit{Delta variant} &                                          &                                                                    \\
-                                          Infection seed time &                         Country-specific &                                                    GISAID database \\
-                                Mean incubation period (days) &                                     4.41 &                   Wu et al. doi:10.1001/jamanetworkopen.2022.28008 \\
-         Relative intrinsic transmissibility (ref. wild-type) &                                     1.38 &                                           DOI: 10.1503/cmaj.211248 \\
-            Relative risk of hospitalisation (ref. wild-type) &                                      2.1 &                             Fisman et al. doi: 10.1503/cmaj.211248 \\
-                      Relative risk of death (ref. wild-type) &                                      2.3 &                             Fisman et al. doi: 10.1503/cmaj.211248 \\
-            Prop. escaping vaccine immunity against infection &                                     0.32 &                                           DOI: 10.1503/cmaj.211248 \\
-                              \quad \textit{Omicron variant} &                                          &                                                                    \\
-                                          Infection seed time &                         Country-specific &                                                    GISAID database \\
-                                Mean incubation period (days) &                                     3.42 &                   Wu et al. doi:10.1001/jamanetworkopen.2022.28008 \\
-         Relative intrinsic transmissibility (ref. wild-type) &                                     1.92 &                                           DOI: 10.1503/cmaj.211248 \\
-            Relative risk of hospitalisation (ref. wild-type) &                                    0.861 &                       Nyberg doi.org/10.1016/S0140-6736(22)00462-7 \\
-                      Relative risk of death (ref. wild-type) &                                    0.713 &                       Nyberg doi.org/10.1016/S0140-6736(22)00462-7 \\
-            Prop. escaping vaccine immunity against infection &                                     0.55 &                                           DOI: 10.1503/cmaj.211248 \\
+                  Transmission probability per contact \textsuperscript{C} &         Uniform (0.01, 0.06) &                                                      Calibrated \\
+                            Mean active disease period (days) &                          4.5 &              \cite{singanayagam2020, hakki2022, killingley2022} \\
+               Country-specific IFR multiplier ($m_C$) \textsuperscript{C} &           Uniform (0.5, 1.5) &                                                      Calibrated \\
+    Uncertainty multiplier for school contacts ($m_S$) \textsuperscript{C} &           Uniform (0.8, 1.2) &                                                      Calibrated \\
+Prop. students on-site during “Partially open” periods \textsuperscript{C} &           Uniform (0.1, 0.5) &                                                      Calibrated \\
+                                         VE against infection &                          0.7 & \cite{charmet2021,pritchard2021, hall2021, dagan2021, jara2021} \\
+                                   VE against hospitalisation &                          0.9 &                               \cite{phe2021,dagan2021,jara2021} \\
+                                             VE against death &                          0.9 &                                         \cite{phe2021,jara2021} \\
+            Time from symptom onset to hospitalisation (days) &      Gamma (shape=5, mean=3) &                                               \cite{isaric2022} \\
+                                Hospital stay duration (days) &      Gamma (shape=5, mean=9) &                                               \cite{isaric2022} \\
+                      Time from symptom onset to death (days) & Gamma (shape=10, mean=15.93) &                                              \cite{khalili2020} \\
+                   \textbf{Strain-specific parameters} &                              &                                                                 \\
+                             \quad \textit{Wild-type strain} &                              &                                                                 \\
+                                Mean incubation period (days) &                         6.65 &                                                   \cite{wu2022} \\
+                                \quad \textit{Delta variant} &                              &                                                                 \\
+                                Mean incubation period (days) &                         4.41 &                                                   \cite{wu2022} \\
+         Relative intrinsic transmissibility (ref. wild-type) &                          1.5 &                                          \cite{li2020,meng2021} \\
+            Relative risk of hospitalisation (ref. wild-type) &                          2.0 &                                               \cite{fisman2021} \\
+                      Relative risk of death (ref. wild-type) &                          2.3 &                                               \cite{fisman2021} \\
+            Prop. escaping vaccine immunity against infection &                          0.3 &                                  \cite{jalili2022, lyngse2022a} \\
+                              \quad \textit{Omicron variant} &                              &                                                                 \\
+                                Mean incubation period (days) &                         3.42 &                                                   \cite{wu2022} \\
+         Relative intrinsic transmissibility (ref. wild-type) &                          2.0 &                                   \cite{jalili2022,lyngse2022a} \\
+            Relative risk of hospitalisation (ref. wild-type) &                         0.82 &                                    \cite{fisman2021,nyberg2022} \\
+                      Relative risk of death (ref. wild-type) &                         0.71 &                                    \cite{fisman2021,nyberg2022} \\
+            Prop. escaping vaccine immunity against infection &                          0.6 &                                   \cite{jalili2022,lyngse2022a} \\
 \bottomrule
 \end{tabular}}
 \end{table}

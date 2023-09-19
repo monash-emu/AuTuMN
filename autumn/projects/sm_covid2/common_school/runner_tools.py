@@ -26,7 +26,7 @@ from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
 
-from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_multiple_model_fits
+from autumn.projects.sm_covid2.common_school.calibration_plots.opti_plots import plot_opti_params, plot_model_fit, plot_model_fits
 from autumn.projects.sm_covid2.common_school.calibration_plots.mc_plots import make_post_mc_plots
 
 from autumn.projects.sm_covid2.common_school.output_plots.country_spec import make_country_output_tiling
@@ -74,24 +74,6 @@ TEST_RUN_CONFIG = {
 """
     Functions related to model calibration
 """
-
-def sample_with_lhs(n_samples, bcm):
-
-    # sample using LHS in the right dimension
-    lhs_sampled_params = [p for p in bcm.priors if p != "random_process.delta_values"]  
-    d = len(lhs_sampled_params)
-    sampler = qmc.LatinHypercube(d=d)
-    regular_sample = sampler.random(n=n_samples)
-    
-    # scale the data cube to match parameter bounds
-    l_bounds = [bcm.priors[p].bounds()[0] for p in lhs_sampled_params]
-    u_bounds = [bcm.priors[p].bounds()[1] for p in lhs_sampled_params]
-    sample = qmc.scale(regular_sample, l_bounds, u_bounds)
-    
-    sample_as_dicts = [{p: sample[i][j] for j, p in enumerate(lhs_sampled_params)} for i in range(n_samples)]
-
-    return sample_as_dicts
-
 
 def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 0, search_iterations: int = 5000, suggested_start: dict = None, opt_class=ng.optimizers.CMA):
 
@@ -251,37 +233,36 @@ def run_full_analysis(
     # Sample optimisation starting points with LHS
     if logger:
         logger.info("Perform LHS sampling")
-    sample_as_dicts = sample_with_lhs(run_config['n_opti_searches'], bcm)
-            
+    lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
+    lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
+
     # Store starting points
     with open(out_path / "LHS_init_points.yml", "w") as f:
-        yaml.dump(sample_as_dicts, f)
+        yaml.dump(lhs_samples_as_dicts, f)
 
     # Perform optimisation searches
     if logger:
         logger.info(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
     n_opti_workers = 8
     def opti_func(sample_dict):
-        best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=sample_dict)
+        suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
+        best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=suggested_start)
         return best_p
 
-    best_params = map_parallel(opti_func, sample_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
+    best_params = map_parallel(opti_func, lhs_samples_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
     # Store optimal solutions
     with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
 
     if logger:
         logger.info("... optimisation completed")
-
-    # Keep only n_chains best solutions
-    loglikelihoods = [bcm.loglikelihood(**p) for p in best_params]
-    ll_cutoff = sorted(loglikelihoods, reverse=True)[run_config['n_chains'] - 1]
-
-    retained_init_points, retained_best_params = [], []
-    for init_sample, best_p, ll in zip(sample_as_dicts, best_params, loglikelihoods):
-        if ll >= ll_cutoff:
-            retained_init_points.append(init_sample)
-            retained_best_params.append(best_p)
+    
+    # Keep only n_chains best solutions and plot optimised fits
+    best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
+    lle, results = best_outputs.extras, best_outputs.results
+    retained_indices = lle.sort_values("loglikelihood", ascending=False).index[0:run_config['n_chains']].to_list()    
+    retained_best_params = [best_params[i] for i in retained_indices]
+    retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
 
     # Store retained optimal solutions
     with open(out_path / "retained_best_params.yml", "w") as f:
@@ -291,7 +272,8 @@ def run_full_analysis(
     plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
 
     # Plot optimised model fits on a same figure
-    plot_multiple_model_fits(bcm, retained_best_params, out_path / "optimal_fits.png")
+    retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
+    plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
     
     # Early return if MCMC not requested
     if run_config['metropolis_draws'] == 0:

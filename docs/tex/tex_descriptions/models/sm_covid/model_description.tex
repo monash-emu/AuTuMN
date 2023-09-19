@@ -5,7 +5,8 @@
 \section{Model description}
 
 \subsection{General approach}
-We use a semi-mechanistic compartmental model of COVID-19 transmission governed by ordinary differential equations (ODEs). 
+We use a semi-mechanistic compartmental model of COVID-19 transmission governed by ordinary differential equations (ODEs) to
+simulate country-specific COVID-19 epidemics during the first three years of the pandemic (2020-2022). 
 Our model captures important factors of COVID-19 transmission and disease such as age-specific characteristics, 
 heterogeneous mixing, vaccination and the emergence of different variants of concern. 
 The ODE-based model is used to capture only states relevant to transmission, whereas hospitalisations and deaths are
@@ -107,17 +108,8 @@ the infectious latent compartments are half as infectious as the active disease 
 \input{../../tex_descriptions/models/sm_covid/random_process.tex} 
 
 \subsubsection{Ordinary differential equations}
-\label{ODEs}
+\label{ODEs} 
 \input{../../tex_descriptions/models/sm_covid/odes.tex} 
-
-\subsubsection{Model parameters}
-\label{parameters}
-The model parameters and their values (or associated prior distributions) are listed in Table \ref{param_table}.
-\renewcommand{\arraystretch}{1.3}
-\input{../../tex_descriptions/projects/sm_covid/param_table.tex} 
-
-\renewcommand{\arraystretch}{1.3}
-\input{../../tex_descriptions/projects/sm_covid/agespec_table.tex} 
 
 % ____________________________________________________
 % Now, let's talk about the convolution processes
@@ -134,3 +126,7 @@ statistical distributions of time to events to compute COVID-19-related hospital
 \subsubsection{COVID-19 deaths}
 \input{../../tex_descriptions/models/sm_covid/deaths.tex} 
 
+
+\subsection{Model parameters}
+\label{parameters}
+\input{../../tex_descriptions/projects/sm_covid/model_parameters.tex}

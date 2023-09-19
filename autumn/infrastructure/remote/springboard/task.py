@@ -326,6 +326,9 @@ class SpringboardTaskRunner:
 
         raise TimeoutError(cur_status)
 
+    def get_managed_task(self):
+        return ManagedTask(self.run_path)
+
 
 class S3TaskManager:
     """Wrapper for a remote task syncronized via S3

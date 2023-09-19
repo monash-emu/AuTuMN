@@ -39,7 +39,7 @@ seed_duration: 7
 
 sojourns:
   latent: 6.65  # wild-type
-  active: 6.5
+  active: 4.5
 
 mobility:
   region: null

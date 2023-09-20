@@ -24,6 +24,8 @@ from estival import priors as esp
 # Finally we combine these with our summer2 model in a BayesianCompartmentalModel (BCM)
 from estival.model import BayesianCompartmentalModel
 
+from estival.sampling import tools as esamp
+
 
 def run_calibration():
     start = time()
@@ -71,16 +73,16 @@ def run_calibration():
         # See the PyMC docs for more details
         idata = pm.sample(
             step=[pm.DEMetropolis(variables)],
-            draws=10000,
+            draws=2000,
             tune=0,
             cores=8,
             chains=8,
             progressbar=False,
         )
 
-    print(f"Writing {time()-start}", flush=True)
+    print(f"LLE {time()-start}", flush=True)
 
-    idata.to_netcdf("thing.nc")
+    lle = esamp.likelihood_extras_for_idata(idata, bcm)
 
     print(f"Finished {time()-start}", flush=True)
 

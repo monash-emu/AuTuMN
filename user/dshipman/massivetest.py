@@ -28,7 +28,7 @@ from estival.model import BayesianCompartmentalModel
 def run_calibration():
     start = time()
     print(f"Starting {time()-start}", flush=True)
-    m = test_models.sirs_parametric_age(times=[0, 300], agegroups=list(range(240)))
+    m = test_models.sirs_parametric_age(times=[0, 100], agegroups=list(range(128)))
     defp = m.get_default_parameters()
 
     m.run({"contact_rate": 0.1, "recovery_rate": 0.4})

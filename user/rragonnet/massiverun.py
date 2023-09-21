@@ -10,7 +10,7 @@ from pathlib import Path
 from time import time
 
 ANALYSIS = 'main'
-RUN_CONFIG = TEST_RUN_CONFIG
+RUN_CONFIG = TEST_RUN_CONFIG | {'metropolis_draws': 0}
 
 if __name__ == "__main__":
     start_time = time()

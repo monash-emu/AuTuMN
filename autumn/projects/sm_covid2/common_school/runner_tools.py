@@ -74,7 +74,6 @@ TEST_RUN_CONFIG = {
 """
     Functions related to model calibration
 """
-
 def optimise_model_fit(bcm, num_workers: int = 8, warmup_iterations: int = 0, search_iterations: int = 5000, suggested_start: dict = None, opt_class=ng.optimizers.CMA):
 
     # Build optimizer
@@ -234,8 +233,7 @@ def run_full_analysis(
         OPTIMISATION
     """
     # Sample optimisation starting points with LHS
-    if logger:
-        logger.info("Perform LHS sampling")
+    custom_print(logger, "Perform LHS sampling")
     lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
     lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
 
@@ -244,11 +242,7 @@ def run_full_analysis(
         yaml.dump(lhs_samples_as_dicts, f)
 
     # Perform optimisation searches
-    if logger:
-        logger.info(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
-    else:
-        print(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
-
+    custom_print(logger, f"Perform optimisation ({run_config['n_opti_searches']} searches)")
     n_opti_workers = 8
     def opti_func(sample_dict):
         suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
@@ -261,11 +255,8 @@ def run_full_analysis(
         yaml.dump(best_params, f)
 
     opti_end = time()
-    if logger:
-        logger.info(f"... optimisation completed in {opti_end - start_time} seconds.")
-    else:
-        print(f"... optimisation completed in {opti_end - start_time} seconds.")
-    
+    custom_print(logger, f"... optimisation completed in {opti_end - start_time} seconds.")
+
     # Keep only n_chains best solutions and plot optimised fits
     best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
     lle, results = best_outputs.extras, best_outputs.results
@@ -291,35 +282,31 @@ def run_full_analysis(
     """ 
         MCMC
     """
-    if logger:
-        logger.info(f"Start MCMC for {run_config['metropolis_tune']} + {run_config['metropolis_draws']} iterations and {run_config['n_chains']} chains...")
-
+    custom_print(logger, f"Start MCMC for {run_config['metropolis_tune']} + {run_config['metropolis_draws']} iterations and {run_config['n_chains']} chains...")
     n_repeat_seed = 1
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])
     idata.to_netcdf(out_path / "idata.nc")
     make_post_mc_plots(idata, run_config['burn_in'], output_folder)
-    if logger:
-        logger.info("... MCMC completed")
+    custom_print(logger, "... MCMC completed")
     
     """ 
         Post-MCMC processes
     """
     sampled_params = extract_sample_subset(idata, run_config['full_runs_samples'], run_config['burn_in'])  
     
-    if logger:
-        logger.info(f"Perform full runs for {run_config['full_runs_samples']} samples")
+    custom_print(logger, f"Perform full runs for {run_config['full_runs_samples']} samples")
+    full_run_start = time()
     full_runs = run_full_runs(sampled_params, iso3, analysis)
+    custom_print(logger, f"Completed full runs in {round(time() - full_run_start)} seconds.")
 
-    if logger:
-        logger.info("Calculate uncertainty quantiles") 
+    custom_print(logger, "Calculate uncertainty quantiles") 
     unc_dfs = get_uncertainty_dfs(full_runs)
     for scenario, unc_df in unc_dfs.items():
         unc_df.to_parquet(out_path / f"uncertainty_df_{scenario}.parquet")
 
-    if logger:
-        logger.info("Calculate differential output quantiles")
+    custom_print(logger, "Calculate differential output quantiles")
     diff_quantiles_df = calculate_diff_output_quantiles(full_runs)
     diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
 
@@ -332,6 +319,13 @@ def run_full_analysis(
 """
     Helper functions for remote runs
 """
+
+def custom_print(logger, s):
+    if logger:
+        logger.info(s)
+    else:
+        print(s)
+
 
 def dump_runner_details(runner, out_folder_path):
     """

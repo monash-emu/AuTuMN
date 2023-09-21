@@ -33,6 +33,6 @@ if __name__ == "__main__":
     country_output_dir = analysis_output_dir / iso3
     country_output_dir.mkdir(exist_ok=True)
 
-    # _, _, _ = run_full_analysis(iso3, ANALYSIS, RUN_CONFIG, country_output_dir)
+    _, _, _ = run_full_analysis(iso3, ANALYSIS, RUN_CONFIG, country_output_dir)
     
     print(f"Finished in {time() - start_time} seconds", flush=True)

@@ -23,7 +23,7 @@ if __name__ == "__main__":
     mp.set_start_method("forkserver")
 
     # create parent output directory for multi-country analysis if required
-    analysis_name = "test_opti_fra"
+    analysis_name = "full_analysis_21Sep2023"
     output_root_dir = Path.home() / "sh30/users/rragonnet/outputs/"
     array_job_id = sys.argv[1]  # common to all the tasks from this array job
     analysis_output_dir = output_root_dir / f"{array_job_id}_{analysis_name}_{ANALYSIS}"

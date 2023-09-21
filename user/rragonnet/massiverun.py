@@ -16,7 +16,7 @@ if __name__ == "__main__":
     start_time = time()
 
     # Retrieve country iso3 to run
-    job_array_index = int(sys.argv[1])
+    array_task_id = int(sys.argv[2])  # specific to this particular run/country
     iso3 = list(INCLUDED_COUNTRIES['google_mobility'].keys())[job_array_index - 1]
     print(f"Start job #{job_array_index}, iso3={iso3}, analysis={ANALYSIS}", flush=True)
 
@@ -25,8 +25,8 @@ if __name__ == "__main__":
     # create parent output directory for multi-country analysis if required
     analysis_name = "short_full_test_array"
     output_root_dir = Path.home() / "sh30/users/rragonnet/outputs/"
-    timestamp = sys.argv[2] 
-    analysis_output_dir = output_root_dir / f"{timestamp}_{analysis_name}_{ANALYSIS}"
+    array_job_id = sys.argv[1]  # common to all the tasks from this array job
+    analysis_output_dir = output_root_dir / f"{array_job_id}_{analysis_name}_{ANALYSIS}"
     analysis_output_dir.mkdir(exist_ok=True)
 
     # create country-specific output dir

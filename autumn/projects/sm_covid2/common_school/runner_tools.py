@@ -6,7 +6,7 @@ import arviz as az
 import pandas as pd
 import numpy as np
 from scipy.stats import qmc
-from time import sleep
+from time import sleep, time
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -221,6 +221,9 @@ def run_full_analysis(
     output_folder="test_outputs",
     logger=None
 ):
+
+    start_time = time()
+
     out_path = Path(output_folder)
     assert run_config['n_chains'] <= run_config['n_opti_searches']
 
@@ -243,6 +246,9 @@ def run_full_analysis(
     # Perform optimisation searches
     if logger:
         logger.info(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
+    else:
+        print(f"Perform optimisation ({run_config['n_opti_searches']} searches)")
+
     n_opti_workers = 8
     def opti_func(sample_dict):
         suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
@@ -254,8 +260,11 @@ def run_full_analysis(
     with open(out_path / "best_params.yml", "w") as f:
         yaml.dump(best_params, f)
 
+    opti_end = time()
     if logger:
-        logger.info("... optimisation completed")
+        logger.info(f"... optimisation completed in {opti_end - start_time} seconds.")
+    else:
+        print(f"... optimisation completed in {opti_end - start_time} seconds.")
     
     # Keep only n_chains best solutions and plot optimised fits
     best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)

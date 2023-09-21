@@ -43,6 +43,7 @@ numba
 scipy==1.8.1
 networkx
 numpyro==0.10.1
+nevergrad==0.6.0
 
 # Database and file access
 SQLAlchemy==1.4.46

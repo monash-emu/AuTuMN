@@ -20,7 +20,7 @@ if __name__ == "__main__":
     iso3 = list(INCLUDED_COUNTRIES['google_mobility'].keys())[array_task_id - 1]
     print(f"Start job #{array_task_id}, iso3={iso3}, analysis={ANALYSIS}", flush=True)
 
-    mp.set_start_method("forkserver")
+    mp.set_start_method("spawn")  # previously "forkserver"
 
     # create parent output directory for multi-country analysis if required
     analysis_name = "full_analysis_21Sep2023"

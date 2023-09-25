@@ -91,3 +91,6 @@ data/pbi_outputs_for_opti/by_location/fully_immune/output_table_fully_immune_by_
 
 # ignoring marshall islands figures and databases
 autumn/projects/tuberculosis/marshall_islands/outputs/all_outputs/*
+
+# ignore Romain's remote output runs
+user/rragonnet/remote_run_outputs

@@ -6,7 +6,7 @@ import arviz as az
 import pandas as pd
 import numpy as np
 from scipy.stats import qmc
-from time import sleep, time
+from time import sleep, time, localtime, strftime
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -220,7 +220,7 @@ def run_full_analysis(
     output_folder="test_outputs",
     logger=None
 ):
-
+    n_io_retries = 5  # how many times should we retry to write outputs to the disk (prevent crash due to random I/O error)
     start_time = time()
 
     out_path = Path(output_folder)
@@ -237,10 +237,6 @@ def run_full_analysis(
     lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
     lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
 
-    # Store starting points
-    with open(out_path / "LHS_init_points.yml", "w") as f:
-        yaml.dump(lhs_samples_as_dicts, f)
-
     # Perform optimisation searches
     custom_print(logger, f"Perform optimisation ({run_config['n_opti_searches']} searches)")
     n_opti_workers = 8
@@ -250,12 +246,8 @@ def run_full_analysis(
         return best_p
 
     best_params = map_parallel(opti_func, lhs_samples_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
-    # Store optimal solutions
-    with open(out_path / "best_params.yml", "w") as f:
-        yaml.dump(best_params, f)
-
     opti_end = time()
-    custom_print(logger, f"... optimisation completed in {opti_end - start_time} seconds.")
+    custom_print(logger, f"... optimisation completed in {round(opti_end - start_time)} seconds.")
 
     # Keep only n_chains best solutions and plot optimised fits
     best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
@@ -263,18 +255,32 @@ def run_full_analysis(
     retained_indices = lle.sort_values("loglikelihood", ascending=False).index[0:run_config['n_chains']].to_list()    
     retained_best_params = [best_params[i] for i in retained_indices]
     retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
-
-    # Store retained optimal solutions
-    with open(out_path / "retained_best_params.yml", "w") as f:
-        yaml.dump(retained_best_params, f)
-    
-    # Plot optimal solutions and matching starting points
-    plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
-
-    # Plot optimised model fits on a same figure
     retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
-    plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
     
+    """ 
+     --> Dump optimisation-related files and make associated plots
+    """
+    for attempt in range(n_io_retries):
+        try:
+            # Store starting points
+            with open(out_path / "LHS_init_points.yml", "w") as f:
+                yaml.dump(lhs_samples_as_dicts, f)
+            # Store optimal solutions
+            with open(out_path / "best_params.yml", "w") as f:
+                yaml.dump(best_params, f)
+            # Store retained optimal solutions
+            with open(out_path / "retained_best_params.yml", "w") as f:
+                yaml.dump(retained_best_params, f)
+            # Plot optimal solutions and matching starting points
+            plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
+            # Plot optimised model fits on a same figure
+            plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
+
+            break
+        except:
+            time.sleep(1)
+    
+
     # Early return if MCMC not requested
     if run_config['metropolis_draws'] == 0:
         return None, None, None
@@ -287,10 +293,19 @@ def run_full_analysis(
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
     idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])
-    idata.to_netcdf(out_path / "idata.nc")
-    make_post_mc_plots(idata, run_config['burn_in'], output_folder)
     custom_print(logger, "... MCMC completed")
     
+    """
+     --> Dump MCMC output data and make post-MCMC plots
+    """
+    for attempt in range(n_io_retries):
+        try:
+            idata.to_netcdf(out_path / "idata.nc")
+            make_post_mc_plots(idata, run_config['burn_in'], output_folder)
+            break
+        except:
+            time.sleep(1)
+
     """ 
         Post-MCMC processes
     """
@@ -303,15 +318,23 @@ def run_full_analysis(
 
     custom_print(logger, "Calculate uncertainty quantiles") 
     unc_dfs = get_uncertainty_dfs(full_runs)
-    for scenario, unc_df in unc_dfs.items():
-        unc_df.to_parquet(out_path / f"uncertainty_df_{scenario}.parquet")
-
+    
     custom_print(logger, "Calculate differential output quantiles")
     diff_quantiles_df = calculate_diff_output_quantiles(full_runs)
-    diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
 
-    # Make multi-panel figure
-    make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
+    """
+     --> Dump post-full-runs data and final figure 
+    """
+    for attempt in range(n_io_retries):
+        try:
+            for scenario, unc_df in unc_dfs.items():
+                unc_df.to_parquet(out_path / f"uncertainty_df_{scenario}.parquet")
+            diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
+            # Make multi-panel figure
+            make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
+            break
+        except:
+            time.sleep(1)
 
     return idata, unc_dfs, diff_quantiles_df
 
@@ -321,10 +344,11 @@ def run_full_analysis(
 """
 
 def custom_print(logger, s):
+    timed_s = f"{strftime('%H:%M:%S', localtime())}>> {s}"
     if logger:
-        logger.info(s)
+        logger.info(timed_s)
     else:
-        print(s)
+        print(timed_s)
 
 
 def dump_runner_details(runner, out_folder_path):

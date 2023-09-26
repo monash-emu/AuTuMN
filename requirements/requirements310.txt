@@ -20,7 +20,7 @@ estival==0.4.4
 # Linux/OSX already installed via computegraph
 #-f https://whls.blob.core.windows.net/unstable/index.html
 #jax[cpu]===0.3.25; sys_platform == 'win32'
-jax[cpu]==0.4.13
+jax==0.4.16
 
 # Interaction
 jupyterlab==3.2.0

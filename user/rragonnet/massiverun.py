@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # Retrieve country iso3 to run
     array_task_id = int(sys.argv[2])  # specific to this particular run/country
-    iso3 = list(INCLUDED_COUNTRIES['google_mobility'].keys())[array_task_id - 1]
+    iso3 = list(INCLUDED_COUNTRIES['all'].keys())[array_task_id - 1]
     print(f"Start job #{array_task_id}, iso3={iso3}, analysis={ANALYSIS}", flush=True)
 
     mp.set_start_method("spawn")  # previously "forkserver"

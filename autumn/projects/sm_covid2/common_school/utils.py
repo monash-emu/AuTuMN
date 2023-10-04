@@ -2,15 +2,6 @@ import yaml
 import os
 from autumn.settings.folders import PROJECTS_PATH
 
-
-def get_school_country_list(nationbal_only=False):
-    source = os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml")
-    country_dict = yaml.load(open(source), Loader=yaml.UnsafeLoader)
-    primary_key = "national" if nationbal_only else "all"
-
-    return country_dict[primary_key]   
-
-
 SCHOOL_ISO2_LIST = [
     'AW', 'AF', 'AO', 'AL', 'AE', 'AR', 'AM', 'AG', 'AU', 'AT', 'AZ', 'BI', 'BE', 'BJ', 'BF', 'BD', 'BG', 'BH', 'BS', 
     'BA', 'BY', 'BZ', 'BO', 'BR', 'BB', 'BN', 'BW', 'CF', 'CA', 'CH', 'CL', 'CN', 'CI', 'CM', 'CD', 'CG', 'CO', 'KM', 

@@ -1,88 +1,5 @@
 all:
   ARG: Argentina
-  ARM: Armenia
-  AUS: Australia
-  AUT: Austria
-  AZE: Azerbaijan
-  BEL: Belgium
-  BGD: Bangladesh
-  BGR: Bulgaria
-  BIH: Bosnia and Herzegovina
-  BLR: Belarus
-  BOL: Bolivia, Plurinational State of
-  BRA: Brazil
-  CAN: Canada
-  CHL: Chile
-  CHN: China
-  COL: Colombia
-  CRI: Costa Rica
-  CZE: Czechia
-  DEU: Germany
-  DNK: Denmark
-  DZA: Algeria
-  ECU: Ecuador
-  EGY: Egypt
-  ESP: Spain
-  ETH: Ethiopia
-  FIN: Finland
-  FRA: France
-  GBR: United Kingdom
-  GEO: Georgia
-  GRC: Greece
-  GTM: Guatemala
-  HND: Honduras
-  HRV: Croatia
-  HUN: Hungary
-  IDN: Indonesia
-  IND: India
-  IRL: Ireland
-  IRN: Iran, Islamic Republic of
-  IRQ: Iraq
-  ISR: Israel
-  ITA: Italy
-  JOR: Jordan
-  JPN: Japan
-  KAZ: Kazakhstan
-  KEN: Kenya
-  KOR: Korea, Republic of
-  LBN: Lebanon
-  LKA: Sri Lanka
-  LTU: Lithuania
-  LVA: Latvia
-  MAR: Morocco
-  MDA: Moldova, Republic of
-  MEX: Mexico
-  MKD: North Macedonia
-  MMR: Myanmar
-  MYS: Malaysia
-  NLD: Netherlands
-  NPL: Nepal
-  PAK: Pakistan
-  PAN: Panama
-  PER: Peru
-  PHL: Philippines
-  POL: Poland
-  PRT: Portugal
-  PRY: Paraguay
-  ROU: Romania
-  RUS: Russian Federation
-  SAU: Saudi Arabia
-  SRB: Serbia
-  SVK: Slovakia
-  SVN: Slovenia
-  SWE: Sweden
-  THA: Thailand
-  TUN: Tunisia
-  TUR: Turkey
-  UKR: Ukraine
-  URY: Uruguay
-  USA: United States
-  VEN: Venezuela, Bolivarian Republic of
-  VNM: Viet Nam
-  ZAF: South Africa
-  ZWE: Zimbabwe
-google_mobility:
-  ARG: Argentina
   AUS: Australia
   AUT: Austria
   BEL: Belgium
@@ -177,7 +94,6 @@ national_sero:
   HRV: Croatia
   HUN: Hungary
   IND: India
-  IRN: Iran, Islamic Republic of
   ISR: Israel
   ITA: Italy
   JOR: Jordan

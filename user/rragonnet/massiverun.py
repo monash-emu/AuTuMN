@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from time import time
 
-ANALYSIS = 'increased_hh_contacts'  # ["main", "no_google_mobility", "increased_hh_contacts"]
+ANALYSIS = 'no_google_mobility'  # ["main", "no_google_mobility", "increased_hh_contacts"]
 RUN_CONFIG = DEFAULT_RUN_CONFIG
 
 if __name__ == "__main__":

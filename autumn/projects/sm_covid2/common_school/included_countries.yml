@@ -1,121 +1,4 @@
 all:
-  AGO: Angola
-  ALB: Albania
-  ARG: Argentina
-  ARM: Armenia
-  AUS: Australia
-  AUT: Austria
-  AZE: Azerbaijan
-  BEL: Belgium
-  BGD: Bangladesh
-  BGR: Bulgaria
-  BIH: Bosnia and Herzegovina
-  BLR: Belarus
-  BOL: Bolivia, Plurinational State of
-  BRA: Brazil
-  BWA: Botswana
-  CAN: Canada
-  CHL: Chile
-  CHN: China
-  CMR: Cameroon
-  COD: Congo, The Democratic Republic of the
-  COL: Colombia
-  CRI: Costa Rica
-  CZE: Czechia
-  DEU: Germany
-  DNK: Denmark
-  DOM: Dominican Republic
-  DZA: Algeria
-  ECU: Ecuador
-  EGY: Egypt
-  ESP: Spain
-  EST: Estonia
-  ETH: Ethiopia
-  FIN: Finland
-  FRA: France
-  GBR: United Kingdom
-  GEO: Georgia
-  GHA: Ghana
-  GRC: Greece
-  GTM: Guatemala
-  GUY: Guyana
-  HND: Honduras
-  HRV: Croatia
-  HUN: Hungary
-  IDN: Indonesia
-  IND: India
-  IRL: Ireland
-  IRN: Iran, Islamic Republic of
-  IRQ: Iraq
-  ISR: Israel
-  ITA: Italy
-  JAM: Jamaica
-  JOR: Jordan
-  JPN: Japan
-  KAZ: Kazakhstan
-  KEN: Kenya
-  KHM: Cambodia
-  KOR: Korea, Republic of
-  KWT: Kuwait
-  LBN: Lebanon
-  LKA: Sri Lanka
-  LTU: Lithuania
-  LUX: Luxembourg
-  LVA: Latvia
-  MAR: Morocco
-  MDA: Moldova, Republic of
-  MEX: Mexico
-  MKD: North Macedonia
-  MMR: Myanmar
-  MNE: Montenegro
-  MNG: Mongolia
-  MOZ: Mozambique
-  MUS: Mauritius
-  MWI: Malawi
-  MYS: Malaysia
-  NAM: Namibia
-  NGA: Nigeria
-  NLD: Netherlands
-  NOR: Norway
-  NPL: Nepal
-  NZL: New Zealand
-  OMN: Oman
-  PAK: Pakistan
-  PAN: Panama
-  PER: Peru
-  PHL: Philippines
-  POL: Poland
-  PRT: Portugal
-  PRY: Paraguay
-  ROU: Romania
-  RUS: Russian Federation
-  RWA: Rwanda
-  SAU: Saudi Arabia
-  SEN: Senegal
-  SGP: Singapore
-  SLV: El Salvador
-  SRB: Serbia
-  SUR: Suriname
-  SVK: Slovakia
-  SVN: Slovenia
-  SWE: Sweden
-  SWZ: Eswatini
-  SYR: Syrian Arab Republic
-  THA: Thailand
-  TTO: Trinidad and Tobago
-  TUN: Tunisia
-  TUR: Turkey
-  UGA: Uganda
-  UKR: Ukraine
-  URY: Uruguay
-  USA: United States
-  VEN: Venezuela, Bolivarian Republic of
-  VNM: Viet Nam
-  ZAF: South Africa
-  ZMB: Zambia
-  ZWE: Zimbabwe
-google_mobility:
-  AGO: Angola
   ARG: Argentina
   AUS: Australia
   AUT: Austria
@@ -126,25 +9,20 @@ google_mobility:
   BLR: Belarus
   BOL: Bolivia, Plurinational State of
   BRA: Brazil
-  BWA: Botswana
   CAN: Canada
   CHL: Chile
-  CMR: Cameroon
   COL: Colombia
   CRI: Costa Rica
   CZE: Czechia
   DEU: Germany
   DNK: Denmark
-  DOM: Dominican Republic
   ECU: Ecuador
   EGY: Egypt
   ESP: Spain
-  EST: Estonia
   FIN: Finland
   FRA: France
   GBR: United Kingdom
   GEO: Georgia
-  GHA: Ghana
   GRC: Greece
   GTM: Guatemala
   HND: Honduras
@@ -156,34 +34,23 @@ google_mobility:
   IRQ: Iraq
   ISR: Israel
   ITA: Italy
-  JAM: Jamaica
   JOR: Jordan
   JPN: Japan
   KAZ: Kazakhstan
   KEN: Kenya
-  KHM: Cambodia
   KOR: Korea, Republic of
-  KWT: Kuwait
   LBN: Lebanon
   LKA: Sri Lanka
   LTU: Lithuania
-  LUX: Luxembourg
   LVA: Latvia
   MAR: Morocco
   MDA: Moldova, Republic of
   MEX: Mexico
   MKD: North Macedonia
   MMR: Myanmar
-  MNG: Mongolia
-  MOZ: Mozambique
-  MUS: Mauritius
   MYS: Malaysia
-  NGA: Nigeria
   NLD: Netherlands
-  NOR: Norway
   NPL: Nepal
-  NZL: New Zealand
-  OMN: Oman
   PAK: Pakistan
   PAN: Panama
   PER: Peru
@@ -193,26 +60,19 @@ google_mobility:
   PRY: Paraguay
   ROU: Romania
   RUS: Russian Federation
-  RWA: Rwanda
   SAU: Saudi Arabia
-  SEN: Senegal
-  SGP: Singapore
-  SLV: El Salvador
   SRB: Serbia
   SVK: Slovakia
   SVN: Slovenia
   SWE: Sweden
   THA: Thailand
-  TTO: Trinidad and Tobago
   TUR: Turkey
-  UGA: Uganda
   UKR: Ukraine
   URY: Uruguay
   USA: United States
   VEN: Venezuela, Bolivarian Republic of
   VNM: Viet Nam
   ZAF: South Africa
-  ZMB: Zambia
   ZWE: Zimbabwe
 national_sero:
   AUS: Australia
@@ -234,7 +94,6 @@ national_sero:
   HRV: Croatia
   HUN: Hungary
   IND: India
-  IRN: Iran, Islamic Republic of
   ISR: Israel
   ITA: Italy
   JOR: Jordan
@@ -245,17 +104,10 @@ national_sero:
   LBN: Lebanon
   LTU: Lithuania
   MEX: Mexico
-  MWI: Malawi
-  NGA: Nigeria
-  NOR: Norway
   NPL: Nepal
-  OMN: Oman
   PAK: Pakistan
   PRT: Portugal
-  SEN: Senegal
-  SGP: Singapore
   SVN: Slovenia
   SWE: Sweden
   USA: United States
   ZAF: South Africa
-  ZMB: Zambia

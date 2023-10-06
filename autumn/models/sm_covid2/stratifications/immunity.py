@@ -6,7 +6,7 @@ from numpy import log
 from jax import numpy as jnp
 from summer2.parameters import Function, Data, Time
 
-from autumn.model_features.functional import piecewise_constant
+from summer2.functions.util import piecewise_constant
 
 from autumn.core.inputs.database import get_input_db
 from autumn.models.sm_covid2.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName

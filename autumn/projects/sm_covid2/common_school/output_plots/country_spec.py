@@ -208,7 +208,7 @@ def plot_two_scenarios(axis, uncertainty_dfs, output_name, iso3, include_unc=Fal
     axis.set_ylim((0, plot_ymax))
 
     if include_legend:
-        axis.legend()
+        axis.legend(title="(median and IQR)")
 
     axis.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
@@ -505,12 +505,12 @@ def test_tiling_plot():
     from pathlib import Path
     import pandas as pd
 
-    directory = Path.cwd() / "autumn" / "projects" / "sm_covid2" / "common_school" / "output_plots" / "test_tiling_plot"
-
-    iso3 = "FRA"
-    uncertainty_df = pd.read_parquet(directory / "uncertainty_df.parquet")
+    iso3 = "ARG"
+    directory = Path.cwd() / "user" / "rragonnet" / "remote_run_outputs" / "31747883_full_analysis_26Sep2023_main" / iso3
+    uncertainty_dfs = {sc: pd.read_parquet(directory / f"uncertainty_df_{sc}.parquet") for sc in ["baseline", "scenario_1"]}
     diff_quantiles_df = pd.read_parquet(directory / "diff_quantiles_df.parquet")
-    output_folder = directory
-    make_country_output_tiling(iso3, uncertainty_df, diff_quantiles_df, output_folder)
+    
+    output_folder = Path.cwd() / "user" / "rragonnet" / "temp"
+    make_country_output_tiling(iso3, uncertainty_dfs, diff_quantiles_df, output_folder)
 
 # test_tiling_plot()

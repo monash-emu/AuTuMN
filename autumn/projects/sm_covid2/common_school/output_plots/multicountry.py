@@ -4,6 +4,17 @@ import pandas as pd
 
 import plotly.graph_objects as go
 
+YLAB_LOOKUP = {
+   "cases_averted_relative": "% infections averted by school closure", 
+   "deaths_averted_relative": "% deaths averted by school closure",
+   "delta_hospital_peak_relative": "Relative reduction in peak hospital occupancy (%)"
+}
+
+YLAB_LOOKUP_SPLIT = {
+   "cases_averted_relative": "% infections averted<br>by school closure", 
+   "deaths_averted_relative": "% deaths averted<br>by school closure",
+   "delta_hospital_peak_relative": "Relative reduction in<br>peak hospital occupancy (%)"
+}
 
 def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_outputs=["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]):
     n_subplots = len(req_outputs)
@@ -11,11 +22,6 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
 
     this_iso3_list = list(output_dfs_dict.keys())
     n_countries = len(this_iso3_list)
-    ylab_lookup = {
-        "cases_averted_relative": "% infections averted by school closure", 
-        "deaths_averted_relative": "% deaths averted by school closure",
-        "delta_hospital_peak_relative": "Relative reduction in peak hospital occupancy (%)"
-    }
 
     box_width = .4
     med_color = 'white'
@@ -56,8 +62,8 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
 
         axis.set_xticks(ticks=range(1, n_countries + 1), labels=sorted_iso3_list, rotation=90, fontsize=13)
 
-        y_label = ylab_lookup[output]
-        axis.set_ylabel(y_label, fontsize=13)
+        y_label = YLAB_LOOKUP[output]
+        axis.set_ylabel(y_label, fontsize=15)
 
         # add coloured backgorund patches
         xmin, xmax = axis.get_xlim()
@@ -80,6 +86,8 @@ def plot_relative_map(output_dfs_dict: dict[str, pd.DataFrame], req_output="delt
    values = [- 100 * output_dfs_dict[iso3][req_output].loc[0.5] for iso3 in this_iso3_list]
    data_df = pd.DataFrame.from_dict({"iso3": this_iso3_list, "values": values})
    
+   legend_title = YLAB_LOOKUP_SPLIT[req_output]
+
    fig = go.Figure(
       data=go.Choropleth(
          locations=data_df["iso3"], 
@@ -89,7 +97,7 @@ def plot_relative_map(output_dfs_dict: dict[str, pd.DataFrame], req_output="delt
                     [1, 'blue']],  # "Plotly3",
          marker_line_color='darkgrey',
          marker_line_width=0.5,
-         colorbar_title="Relative reduction in<br>peak hospital occupancy",
+         colorbar_title=legend_title,
          colorbar_ticksuffix="%",
       )  
    )

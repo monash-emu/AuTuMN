@@ -47,6 +47,11 @@ def gen_autumn_run_bash(
         """
         return textwrap.dedent(testbad)
 
+    extra_commands_testing = []
+    for c in extra_commands:
+        extra_commands_testing.append(c)
+        extra_commands_testing.append(test_to_exit(c))
+
     if branch is None:
         git_script = []
     else:
@@ -71,7 +76,7 @@ def gen_autumn_run_bash(
         # f"aws s3 cp STATUS s3://autumn-data/{run_path}/STATUS\n",
         *git_script,
         cd_base_path,
-        *extra_commands,
+        *extra_commands_testing,
         f"echo Launching python task on {run_path}",
         f"python -m autumn tasks springboard --run {run_path}",
         test_to_exit("run python task"),

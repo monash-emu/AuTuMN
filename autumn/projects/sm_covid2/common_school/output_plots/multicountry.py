@@ -5,12 +5,6 @@ from math import ceil
 
 import plotly.graph_objects as go
 
-YLAB_LOOKUP = {
-   "cases_averted_relative": "% infections averted by school closure", 
-   "deaths_averted_relative": "% deaths averted by school closure",
-   "delta_hospital_peak_relative": "Relative reduction in peak hospital occupancy (%)"
-}
-
 YLAB_LOOKUP_SPLIT = {
    "cases_averted_relative": "% infections averted<br>by school closure", 
    "deaths_averted_relative": "% deaths averted<br>by school closure",
@@ -21,6 +15,17 @@ BOX_COLORS= {
    "cases_averted_relative": "black",
    "deaths_averted_relative": "purple",
    "delta_hospital_peak_relative": "firebrick"
+}
+
+ANALYSIS_COLORS = {
+    "main": "black",
+    "increased_hh_contacts": "firebrick",
+    "no_google_mobility": "mediumblue"
+}
+
+ANALYSIS_TITLES = {
+   "increased_hh_contacts": "SA2: Increased household contacts during closures", 
+   "no_google_mobility": "SA1: Excluding Google mobility data"
 }
 
 def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_outputs=["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]):
@@ -68,7 +73,7 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
 
         axis.set_xticks(ticks=range(1, n_countries + 1), labels=sorted_iso3_list, rotation=90, fontsize=13)
 
-        y_label = YLAB_LOOKUP[output]
+        y_label = YLAB_LOOKUP_SPLIT[output].replace("<br>", " ")
         axis.set_ylabel(y_label, fontsize=15)
 
         # add coloured backgorund patches
@@ -89,6 +94,14 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
 
 def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_averted_relative"):
 
+   sas = ['main', 'no_google_mobility', 'increased_hh_contacts']
+   
+   sa_short_title = {
+      "main": "Base-case",
+      "no_google_mobility": "SA1: No Google mobility",
+      "increased_hh_contacts": "SA2: Increased hh contacts"
+   }
+
    n_countries = len(output_dfs_dict)
    n_subplots = 3
    n_countries_per_subplot = ceil(n_countries / n_subplots)
@@ -102,14 +115,14 @@ def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_ave
    for i_subplot in range(n_subplots):
       iso3_sublist = this_iso3_list[i_subplot * n_countries_per_subplot: (i_subplot + 1) * n_countries_per_subplot]
 
-      box_color = BOX_COLORS[output]
       axis = axes[i_subplot]
       
       y_max_abs = 0.
       x_ticks = []
       for i_iso3, iso3 in enumerate(iso3_sublist):
          x_ticks.append(1. + 3 * i_iso3 + 1)
-         for i_analysis, analysis in enumerate(['main', 'increased_hh_contacts', 'no_google_mobility']):
+         for i_analysis, analysis in enumerate(sas):
+            box_color = ANALYSIS_COLORS[analysis]
             x = 1. + 3 * i_iso3 + i_analysis
 
             data = - 100. * output_dfs_dict[iso3][analysis][output] # use %. And use "-" so positive nbs indicate positive effect of closures
@@ -131,16 +144,26 @@ def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_ave
             y_max_abs = max(abs(q_975), y_max_abs)
             y_max_abs = max(abs(q_025), y_max_abs)
          
-         if i_iso3 < len(iso3_sublist) - 1: 
-            axis.vlines(x=x+.5,ymin=-1.e6,ymax=1.e6, lw=1., color="black", zorder=5)
+         axis.vlines(x=x+.5,ymin=-1.e6,ymax=1.e6, lw=1., color="black", zorder=5)
 
       axis.set_xlim((0, 3 * n_countries_per_subplot + 1))
       axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
 
       axis.set_xticks(ticks=x_ticks, labels=iso3_sublist, rotation=90, fontsize=13)
 
-      y_label = YLAB_LOOKUP[output]
+      y_label = YLAB_LOOKUP_SPLIT[output].replace("<br>", " ")
       axis.set_ylabel(y_label, fontsize=15)
+
+      # add pseudo-legend
+      if i_subplot == 0:
+         if output == "deaths_averted_relative":
+            legend_y = 1.19 * y_max_abs
+            va = "top"
+         else:
+            legend_y = -1.15 * y_max_abs
+            va = "bottom"
+         for i_analysis, analysis in enumerate(sas):
+            axis.text(x=1. + i_analysis, y=legend_y, s=sa_short_title[analysis], fontsize=10, rotation=90, color=ANALYSIS_COLORS[analysis], ha="center", va=va)
 
       # add coloured backgorund patches
       xmin, xmax = axis.get_xlim()
@@ -150,13 +173,68 @@ def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_ave
       rect_low = Rectangle(xy=(xmin, ymin), width=xmax - xmin, height=(ymax - ymin)/2., zorder=-1, facecolor="gainsboro", alpha=.5)  #"mistyrose")
       axis.add_patch(rect_low)
 
-      # axis.text(n_countries * .75, ymax / 2., s="Positive effect of\nschool closures", fontsize=13)
-      # axis.text(n_countries * .25, ymin / 2., s="Negative effect of\nschool closures", fontsize=13)   
-
    plt.tight_layout()
 
    return fig
 
+
+def plot_analyses_median_deltas(diff_quantiles_dfs):
+   this_iso3_list = list(diff_quantiles_dfs.keys())
+
+   sas = ["no_google_mobility", "increased_hh_contacts"]
+   median_deltas = {}
+   for output in ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]:
+      median_deltas[output] = {}
+      for analysis in sas:
+         deltas = [
+               - 100. * (diff_quantiles_dfs[iso3][analysis][output][0.5] - diff_quantiles_dfs[iso3]["main"][output][0.5])
+               for iso3 in this_iso3_list
+         ]
+         median_deltas[output][analysis] = deltas
+
+   fig, axes = plt.subplots(3, 2, figsize=(12, 12))
+
+   for i, output in enumerate(["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]):
+      for j, analysis in enumerate(sas):      
+         ax = axes[i, j]
+         pd.Series(median_deltas[output][analysis]).plot.hist(ax = ax, color=ANALYSIS_COLORS[analysis], alpha=.5)
+         ymax = ax.get_ylim()[1]
+         xmin, xmax = ax.get_xlim()
+         ax.text(s="base-case", x=.015 * (xmax-xmin), y=ymax, rotation=90, ha="left", va="top", fontsize=12)
+
+         ymax = ax.get_ylim()[1]
+         ax.vlines(x=0, ymin=0, ymax=ymax, colors='black', lw=2, linestyles=["dashed"])
+         ax.set_xlabel("Absolute difference between median estimates (%)")
+         ax.set_ylabel("Frenquency (N countries)")
+
+   # Add column labels
+
+   pad=30
+   for ax, sa in zip(axes[0], sas):
+      ax.annotate(
+         ANALYSIS_TITLES[sa], xy=(0.5, 1), xytext=(0, pad),
+         xycoords='axes fraction', textcoords='offset points',
+         size='x-large', ha='center', va='baseline')
+
+   # Add row labels
+   pad=40
+   for ax, output in zip(axes[:, 0], ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]):
+      ax.annotate(
+         YLAB_LOOKUP_SPLIT[output].replace("<br>", "\n"), xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - pad, 0),
+         xycoords=ax.yaxis.label, textcoords='offset points',
+         size='x-large', ha='center', va='center', rotation=90)
+
+   # Draw separation lines
+   # vertical lines
+   vertical_xs = [.07, .51]
+   for x in vertical_xs:
+      plt.plot([x, x], [0, 1.], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
+   # horizontal lines
+   horizontal_ys = [.315, .63, .945]
+   for y in horizontal_ys:
+      plt.plot([0, 1], [y, y], color='black', lw=1, transform=plt.gcf().transFigure, clip_on=False)
+   plt.tight_layout()
+   return fig
 
 
 

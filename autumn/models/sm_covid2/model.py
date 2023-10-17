@@ -478,6 +478,8 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     outputs_builder.request_incidence(
         age_groups, strain_strata, infectious_entry_flow, params.request_incidence_by_age
     )
+    if params.request_incidence_by_age:
+        outputs_builder.request_elderly_incidence_prop(age_groups)
 
     outputs_builder.request_hospitalisations(
         model_times,

@@ -124,6 +124,18 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     save_results=True,
                 )
 
+    def request_elderly_incidence_prop(
+        self,
+        age_groups: List[str],
+    ):
+        agegroup_string = f"Xagegroup_{age_groups[-1]}"
+
+        self.model.request_function_output(
+            name="elderly_incidence_prop",
+            func=DerivedOutput(f"incidence{agegroup_string}") / DerivedOutput("incidence"),
+            save_results=True
+        )
+
     def request_infection_deaths(
         self,
         model_times: np.ndarray,

@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     for analysis in ['main', 'increased_hh_contacts', 'no_google_mobility']:
         b_idata_path = temp_data_path / "burnt_idatas" / f"b_idata_{iso3}_{analysis}.nc"
-        idata = az.from_netcdf(b_idata_path)
+        burnt_idata = az.from_netcdf(b_idata_path)
 
         bcm = get_bcm_object(iso3, analysis)
         lle = esamp.likelihood_extras_for_idata(burnt_idata, bcm)

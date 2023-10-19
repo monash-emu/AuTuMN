@@ -4,6 +4,7 @@ import pandas as pd
 from math import ceil
 
 import plotly.graph_objects as go
+import seaborn as sns
 
 YLAB_LOOKUP_SPLIT = {
    "cases_averted_relative": "% infections averted<br>by school closure", 
@@ -236,6 +237,44 @@ def plot_analyses_median_deltas(diff_quantiles_dfs):
    plt.tight_layout()
    return fig
 
+
+def plot_ll_comparison(combined_ll_df, output="loglikelihood"):
+
+   column_rename = {"ll_extra_ll": "Random process loglikelihood", "logposterior": "Posterior loglikelihood (with offset)"}
+
+   combined_ll_df.replace("main", "Base-case", inplace=True)
+   combined_ll_df.replace("increased_hh_contacts", "Increased hh contacts", inplace=True)
+   combined_ll_df.replace("no_google_mobility", "No Google mobility data", inplace=True)
+
+   combined_ll_df.rename(columns=column_rename, inplace=True)
+
+   this_iso3_list = combined_ll_df.iso3.unique()
+
+   n_countries = len(this_iso3_list)
+   n_subplots = 3
+   n_countries_per_subplot = ceil(n_countries / n_subplots)
+
+   fig, axes = plt.subplots(n_subplots, 1, figsize=(25, n_subplots*6))
+
+   for i_subplot in range(n_subplots):
+      iso3_sublist = this_iso3_list[i_subplot * n_countries_per_subplot: (i_subplot + 1) * n_countries_per_subplot]
+
+      this_df = combined_ll_df[combined_ll_df['iso3'].isin(iso3_sublist)]
+      axis = axes[i_subplot]      
+
+      sns.violinplot(this_df, x="iso3", y=column_rename[output], hue="analysis", ax=axis)
+
+      locs = axis.get_xticks()
+      vlines_xs = [l + .5 for l in locs[:-1]]
+      ymin, ymax = axis.get_ylim()
+      axis.vlines(x=vlines_xs, ymin=ymin, ymax=ymax, colors="black", lw=.5)
+      axis.set_xlim((-.5, n_countries_per_subplot - .5))
+      
+      axis.yaxis.label.set_size(15)
+
+   plt.tight_layout()
+
+   return fig
 
 
 def plot_relative_map(output_dfs_dict: dict[str, pd.DataFrame], req_output="delta_hospital_peak_relative"):

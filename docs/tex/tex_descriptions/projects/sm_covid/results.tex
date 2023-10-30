@@ -1,0 +1,28 @@
+\section{Sensitivity analyses}
+\subsection{SA1: }
+\subsection{SA2: }
+
+\subsection{Output comparisons between analyses}
+
+\subsection{Likelihood comparisons between analyses}
+
+
+\section{Detailed country-specific results}
+
+The next pages include detailed country-specific results for the 74 countries included in 
+our analysis, under the base-case configuration. Detailed country-specific results associated
+with the two sensitivity analyses (SA1 and SA2) are available online at \textcolor{red}{ADD LINK TO COUNTRY-SPECIFIC PROFILES SA1-2}.
+
+You can access any country's outputs under the base-case configuration by clicking on the relevant country's name below:\\
+
+% array below was generated in python (\notebooks\user\rragonnet\project_specific\School_Closure\country_names_list.ipynb)
+% note the first item is deliberately blank to make it easier to match hyperlink indices later
+\def\countrynames{{"", "Argentina", "Australia", "Austria", "Belgium", "Bangladesh", "Bulgaria", "Bosnia and Herzegovina", "Bolivia", "Brazil", "Canada", "Chile", "Colombia", "Costa Rica", "Czechia", "Germany", "Denmark", "Ecuador", "Egypt", "Spain", "Finland", "France", "United Kingdom", "Georgia", "Greece", "Guatemala", "Honduras", "Croatia", "Hungary", "Indonesia", "India", "Ireland", "Iraq", "Israel", "Italy", "Jordan", "Japan", "Kazakhstan", "Kenya", "Korea, Republic of", "Lebanon", "Sri Lanka", "Lithuania", "Latvia", "Morocco", "Moldova, Republic of", "Mexico", "North Macedonia", "Myanmar", "Malaysia", "Netherlands", "Nepal", "Pakistan", "Panama", "Peru", "Philippines", "Poland", "Portugal", "Paraguay", "Romania", "Russian Federation", "Saudi Arabia", "Serbia", "Slovakia", "Slovenia", "Sweden", "Thailand", "Turkey", "Ukraine", "Uruguay", "United States", "Venezuela", "Viet Nam", "South Africa", "Zimbabwe"}}%
+
+\NumTabs{4}
+\noindent
+\foreach \x in {1,...,74}{
+    \textcolor{blue}{\hyperlink{profiles.\x}{\pgfmathparse{\countrynames[\x]}\pgfmathresult} } \tab 
+}
+
+\includepdf[pages=-,nup=2x2,frame=true,link=true,linkname=profiles]{../../../../user/rragonnet/remote_run_outputs/31747883_full_analysis_26Sep2023_main/COMMON_DIRECTORY/multi_tiling.pdf}

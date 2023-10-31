@@ -63,7 +63,6 @@ def get_age_strat(params: Parameters, age_mixing_matrix) -> AgeStratification:
                 return multiplier * diabetes_scale_up(t)
 
             for age in params.age_breakpoints:
-
                 def get_latency_with_diabetes(
                     t,
                     computed_values,

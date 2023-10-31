@@ -41,6 +41,7 @@ def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
     return 1.0 - tfunc(t - faverage_age) / 100.0 * (1.0 - fmultiplier)
  
 
+<<<<<<< HEAD
 # def make_linear_curve(x_0, x_1, y_0, y_1):
 #     assert x_1 > x_0
 #     slope = (y_1 - y_0) / (x_1 - x_0)
@@ -52,6 +53,9 @@ def bcg_multiplier_func(t, tfunc, fmultiplier, faverage_age):
     return curve
 
 def tanh_based_scaleup(t, shape, inflection_time, start_asymptote, end_asymptote=1.0):
+=======
+def tanh_based_scaleup(t,shape, inflection_time, start_asymptote, end_asymptote=1.0):
+>>>>>>> 031fa319bdc9f114c5f7da498eab596132ef9076
     """
     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
     :param shape: shape parameter
@@ -62,6 +66,20 @@ def tanh_based_scaleup(t, shape, inflection_time, start_asymptote, end_asymptote
     """
     assymp_range = end_asymptote - start_asymptote
     return (jnp.tanh(shape * (t - inflection_time)) / 2.0 + 0.5) * assymp_range + start_asymptote
+<<<<<<< HEAD
+=======
+
+
+def make_linear_curve(x_0, x_1, y_0, y_1):
+    assert x_1 > x_0
+    slope = (y_1 - y_0) / (x_1 - x_0)
+
+    @jax.jit
+    def curve(x):
+        return y_0 + slope * (x - x_0)
+
+    return curve
+>>>>>>> 031fa319bdc9f114c5f7da498eab596132ef9076
 
 def get_latency_with_diabetes(
     t,
@@ -69,8 +87,13 @@ def get_latency_with_diabetes(
     previous_progression_rate,
     rr_progression_diabetes,
     ):
+<<<<<<< HEAD
 
     return (1.0 - 
             tanh_based_scaleup(t, shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0) * 
             prop_diabetes * 
             (1.0 - rr_progression_diabetes)) * previous_progression_rate
+=======
+    diabetes_scale_up = tanh_based_scaleup(t, shape=0.05, inflection_time=1980, start_asymptote=0.0, end_asymptote=1.0)
+    return (1.0 - diabetes_scale_up(t) * prop_diabetes * (1.0 - rr_progression_diabetes)) * previous_progression_rate
+>>>>>>> 031fa319bdc9f114c5f7da498eab596132ef9076

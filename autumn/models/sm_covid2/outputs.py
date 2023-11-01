@@ -73,6 +73,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         strain_strata: List[str],
         incidence_flow: str,
         request_incidence_by_age: bool,
+        request_incidence_by_strain: bool = True,
     ):
         """
         Calculate incident disease cases. This is associated with the transition to infectiousness if there is only one
@@ -92,6 +93,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
         self.model.request_output_for_flow(name="incidence", flow_name=incidence_flow)
 
         # Stratified
+        strain_incidence_sources = {strain: [] for strain in strain_strata}
         for agegroup in age_groups:
             agegroup_string = f"Xagegroup_{agegroup}"
             age_incidence_sources = []
@@ -108,6 +110,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
 
                     output_name = f"incidence{agegroup_string}{immunity_string}{strain_string}"
                     age_incidence_sources.append(output_name)
+                    strain_incidence_sources[strain].append(output_name)
 
                     self.model.request_output_for_flow(
                         name=output_name,
@@ -124,6 +127,21 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                     save_results=True,
                 )
 
+
+        # Aggregated incidence by strain
+        if request_incidence_by_strain:
+
+            for strain in strain_strata:                 
+                strain_string = f"Xstrain_{strain}" if strain else ""
+                output_name = f"incidence{strain_string}"
+
+                self.model.request_aggregate_output(
+                    name=output_name,
+                    sources=strain_incidence_sources[strain],
+                    save_results=False,
+                )       
+            
+
     def request_elderly_incidence_prop(
         self,
         age_groups: List[str],
@@ -135,6 +153,21 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             func=DerivedOutput(f"incidence{agegroup_string}") / DerivedOutput("incidence"),
             save_results=True
         )
+
+    def request_cumulative_incidence_prop_by_strain(
+        self,
+        strain_strata: List[str],
+    ):
+        for strain in strain_strata: 
+            strain_string = f"Xstrain_{strain}" if strain else ""
+            cum_output_name = f"cumulative_incidence{strain_string}"
+
+            self.model.request_function_output(
+                name=f"cumulative_incidence_prop{strain_string}",
+                func=DerivedOutput(cum_output_name) / DerivedOutput("cumulative_incidence"),
+                save_results=True
+            )
+
 
     def request_infection_deaths(
         self,
@@ -647,7 +680,7 @@ class SmCovidOutputsBuilder(OutputsBuilder):
                         func=make_age_immune_prop_func(popsize)(DerivedOutput(n_age_immune_name))
                     )
 
-    def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time):
+    def request_cumulative_outputs(self, requested_cumulative_outputs, cumulative_start_time, strain_strata):
         """
         Compute cumulative outputs for requested outputs.
 
@@ -655,8 +688,15 @@ class SmCovidOutputsBuilder(OutputsBuilder):
             requested_cumulative_outputs: List of requested derived outputs to accumulate
             cumulative_start_time: reference time for cumulative output calculation
         """
+        computed_cumulative_outputs = requested_cumulative_outputs
 
-        for output in requested_cumulative_outputs:
+        # also request cumulative incidence by strain
+        for strain in strain_strata:                 
+            strain_string = f"Xstrain_{strain}" if strain else ""
+            output_name = f"incidence{strain_string}"
+            computed_cumulative_outputs.append(output_name)
+
+        for output in computed_cumulative_outputs:
             self.model.request_cumulative_output(
                 name=f"cumulative_{output}", source=output, start_time=cumulative_start_time
             )

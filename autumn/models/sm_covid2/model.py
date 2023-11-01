@@ -523,8 +523,11 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     )
 
     outputs_builder.request_cumulative_outputs(
-        params.requested_cumulative_outputs, params.cumulative_start_time
+        params.requested_cumulative_outputs, params.cumulative_start_time, strain_strata
     )
+
+    if "incidence" in params.requested_cumulative_outputs:
+        outputs_builder.request_cumulative_incidence_prop_by_strain(strain_strata)
 
     if params.activate_random_process:
         outputs_builder.request_random_process_outputs()

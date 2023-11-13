@@ -28,7 +28,7 @@ SQLAlchemy>=1.1.18
 pyarrow
 
 # Utility
-pyyaml==5.3
+pyyaml==5.4
 pydantic
 pyAesCrypt==0.4.3
 googledrivedownloader >=0.4

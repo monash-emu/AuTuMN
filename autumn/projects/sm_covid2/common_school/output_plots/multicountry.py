@@ -1,15 +1,18 @@
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 import pandas as pd
-from math import ceil
+from math import floor, ceil
+from numpy import arange
 
 import plotly.graph_objects as go
+import plotly.express as px
+
 import seaborn as sns
 
 YLAB_LOOKUP_SPLIT = {
    "cases_averted_relative": "% infections averted<br>by school closure", 
    "deaths_averted_relative": "% deaths averted<br>by school closure",
-   "delta_hospital_peak_relative": "Relative reduction in<br>peak hospital occupancy (%)"
+   "delta_hospital_peak_relative": "Relative reduction in<br>peak hospital<br>occupancy (%)"
 }
 
 BOX_COLORS= {
@@ -278,6 +281,7 @@ def plot_ll_comparison(combined_ll_df, output="loglikelihood"):
 
 
 def plot_relative_map(output_dfs_dict: dict[str, pd.DataFrame], req_output="delta_hospital_peak_relative"):
+
    this_iso3_list = list(output_dfs_dict.keys())
    values = [- 100 * output_dfs_dict[iso3][req_output].loc[0.5] for iso3 in this_iso3_list]
    data_df = pd.DataFrame.from_dict({"iso3": this_iso3_list, "values": values})
@@ -309,3 +313,72 @@ def plot_relative_map(output_dfs_dict: dict[str, pd.DataFrame], req_output="delt
       width=1200,
    )
    return fig
+
+
+def plot_relative_map_with_bins(diff_quantiles_dfs, req_output="cases_averted_relative", panel=""):
+
+    this_iso3_list = list(diff_quantiles_dfs.keys())
+    values = [- 100 * diff_quantiles_dfs[iso3][req_output].loc[0.5] for iso3 in this_iso3_list]
+
+    # create bins
+    step = 10.
+    min_bin = step * floor(min(values) / step)
+    max_bin = step * ceil(max(values) / step)    
+    bins = arange(min_bin, max_bin + step, step)
+    data_df = pd.DataFrame.from_dict({"iso3": this_iso3_list, "values": values})
+    data_df['category'] = pd.cut(data_df['values'], bins).astype(str)
+
+    # work out colors and bin order
+    neg_color_palette_6 = px.colors.sequential.BuGn[3:9]
+    n_negative = len([b for b in bins if b < 0.])
+    neg_colors = neg_color_palette_6[0:n_negative]
+
+    n_positive = len(bins) - 1 - n_negative 
+    pos_color_palette = px.colors.sequential.Reds[1:] if n_positive < 9 else px.colors.sequential.Reds
+    pos_colors = pos_color_palette[0:n_positive]
+
+    all_colors = neg_colors[::-1] + pos_colors    
+    bin_orders = [f"({lower}, {lower + step}]" for lower in bins[:-1]]
+
+    legend_title = YLAB_LOOKUP_SPLIT[req_output]
+
+    fig = px.choropleth(
+            data_df,
+            locations=data_df["iso3"], 
+            color=data_df["category"],
+            color_discrete_sequence = all_colors,
+            category_orders={"category": bin_orders},       
+            labels={"category": legend_title},
+            fitbounds='locations'
+        )  
+    fig.update_layout(
+        geo=dict(
+            showframe=False,
+            showcoastlines=False,
+            projection_type='equirectangular'       #'natural earth'   'equirectangular'
+            ),
+        margin={"r":0,"t":0,"l":0,"b":0},
+        autosize=False,
+        height=500,
+        width=1200,
+        font=dict(
+            family="Times New Roman",
+            size=16,
+            color="black"
+        ),
+        legend=dict(  
+            y=.5,
+            x=1,
+            itemwidth=50
+        ),
+    )
+
+    fig.add_annotation(x=0.02, y=.99, text=panel, showarrow=False, 
+        font=dict(
+            family="Times New Roman",
+            size=25,  # Set the font size here
+            color="black"
+        )
+    )
+    
+    return fig

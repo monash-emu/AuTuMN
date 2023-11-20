@@ -16,9 +16,9 @@ YLAB_LOOKUP_SPLIT = {
 }
 
 BOX_COLORS= {
-   "cases_averted_relative": "black",
-   "deaths_averted_relative": "purple",
-   "delta_hospital_peak_relative": "firebrick"
+   "cases_averted_relative": "steelblue",   # "black",
+   "deaths_averted_relative": "mediumseagreen", # "purple",
+   "delta_hospital_peak_relative": "tomato", # "firebrick"
 }
 
 ANALYSIS_COLORS = {
@@ -33,6 +33,9 @@ ANALYSIS_TITLES = {
 }
 
 def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_outputs=["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"]):
+    
+    plt.rcParams["font.family"] = "Times New Roman"    
+    
     n_subplots = len(req_outputs)
     fig, axes = plt.subplots(n_subplots, 1, figsize=(25, n_subplots*6))
 
@@ -75,10 +78,10 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
             axis.set_xlim((0, n_countries + 1))
             axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
 
-        axis.set_xticks(ticks=range(1, n_countries + 1), labels=sorted_iso3_list, rotation=90, fontsize=13)
+        axis.set_xticks(ticks=range(1, n_countries + 1), labels=sorted_iso3_list, rotation=90, fontsize=16)
 
         y_label = YLAB_LOOKUP_SPLIT[output].replace("<br>", " ")
-        axis.set_ylabel(y_label, fontsize=15)
+        axis.set_ylabel(y_label, fontsize=18)
 
         # add coloured backgorund patches
         xmin, xmax = axis.get_xlim()
@@ -88,8 +91,13 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
         rect_low = Rectangle(xy=(xmin, ymin), width=xmax - xmin, height=(ymax - ymin)/2., zorder=-1, facecolor="gainsboro", alpha=.5)  #"mistyrose")
         axis.add_patch(rect_low)
 
-        axis.text(n_countries * .75, ymax / 2., s="Positive effect of\nschool closures", fontsize=13)
-        axis.text(n_countries * .25, ymin / 2., s="Negative effect of\nschool closures", fontsize=13)   
+        axis.text(n_countries * .75, ymax / 2., s="Positive effect of\nschool closures", fontsize=18)
+        axis.text(n_countries * .25, ymin / 2., s="Negative effect of\nschool closures", fontsize=18)   
+
+        axis.tick_params(axis='y', labelsize=16)
+
+        panel = ["A", "B", "C"][i_output]
+        axis.text(-0.04, 1.07, panel, transform=axis.transAxes, fontsize=25, va='top', ha='right')
 
     plt.tight_layout()
 

@@ -16,9 +16,9 @@ YLAB_LOOKUP_SPLIT = {
 }
 
 BOX_COLORS= {
-   "cases_averted_relative": "steelblue",   # "black",
-   "deaths_averted_relative": "mediumseagreen", # "purple",
-   "delta_hospital_peak_relative": "tomato", # "firebrick"
+   "cases_averted_relative": "firebrick",  # "steelblue",   # "black",
+   "deaths_averted_relative": "firebrick", # "mediumseagreen", # "purple",
+   "delta_hospital_peak_relative": "firebrick", # "tomato", # "firebrick"
 }
 
 ANALYSIS_COLORS = {

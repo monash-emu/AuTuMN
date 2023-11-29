@@ -47,16 +47,15 @@ title_lookup = {
     "infection_deaths": "COVID-19 deaths",
     "infection_deaths_ma7": "COVID-19 deaths",
     "cumulative_infection_deaths": "Cumulative deaths",
-    "cumulative_incidence": "Cumulative incidence",
+    "cumulative_incidence": "Cumulative infections",
 
-    "hospital_admissions": "new daily hospital admissions",
+    "hospital_admissions": "Daily hospital admissions",
     "icu_admissions": "new daily admissions to ICU",
-    "incidence": "daily new infections",
-    "hospital_admissions": "daily hospital admissions",
+    "incidence": "Daily infections",
     "hospital_occupancy": "Hospital pressure",
     "icu_admissions": "daily ICU admissions",
     "icu_occupancy": "total ICU beds",
-    "prop_ever_infected": "ever infected",
+    "prop_ever_infected": "Prop. ever infected",
     "prop_ever_infected_age_matched": "Prop. ever infected\n(age-matched)",
 
     "transformed_random_process": "Transformed random process",
@@ -73,8 +72,9 @@ unesco_data = input_db.query(
 )
 
 SCHOOL_COLORS = {
-    'partial': 'silver', #  'azure',
-    'full': 'gold' # 'thistle'
+    'partial': 'darkgrey',  # 'silver', #  'azure',
+    'full': 'dimgrey', # 'gold', # 'thistle'
+    'academic': 'thistle'
 }
 
 def y_fmt(tick_val, pos):
@@ -162,7 +162,7 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, inc
         title = "Prop. ever infected"
 
     axis.set_ylabel(title)
-    plt.tight_layout()
+    # plt.tight_layout()
 
     if include_legend:
         plt.legend(markerscale=2.)
@@ -180,7 +180,7 @@ def plot_two_scenarios(axis, uncertainty_dfs, output_name, iso3, include_unc=Fal
         time = df.index
         
         colour = unc_sc_colours[i_sc]
-        label = "baseline" if i_sc == 0 else "schools open"
+        label = "Historical" if i_sc == 0 else "Counterfactual"
         scenario_zorder = 10 if i_sc == 0 else i_sc + 2
 
         if include_unc:
@@ -212,7 +212,7 @@ def plot_two_scenarios(axis, uncertainty_dfs, output_name, iso3, include_unc=Fal
 
     axis.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
-    plt.tight_layout()
+    # plt.tight_layout()
 
 
 def plot_final_size_compare(axis, uncertainty_dfs, output_name):
@@ -244,7 +244,7 @@ def plot_final_size_compare(axis, uncertainty_dfs, output_name):
         
     title = output_name if output_name not in title_lookup else title_lookup[output_name]
     axis.set_ylabel(title)
-    axis.set_xticks(ticks=[1, 2], labels=["baseline", "schools open"]) #, fontsize=15)
+    axis.set_xticks(ticks=[1, 2], labels=["Historical", "Counterfactual"]) #, fontsize=15)
 
     axis.set_xlim((0.5, 2.5))
     axis.set_ylim((0, y_max * 1.2))
@@ -424,17 +424,6 @@ def make_country_output_tiling(iso3, uncertainty_dfs, diff_quantiles_df, output_
     plot_diff_outputs(ax9, diff_quantiles_df, ["delta_hospital_peak_relative"])
     remove_axes_box(ax9)
 
-    # plot_incidence_by_age(derived_outputs, ax9, 1, as_proportion=False)
-    # plt.setp(ax9.get_xticklabels(), visible=False)
-
-    # # bottom left
-    # ax10 = fig.add_subplot(inner_grid[2, 0], sharex=ax8)
-    # plot_incidence_by_age(derived_outputs, ax10, 0, as_proportion=True)
-    # # bottom right
-    # ax11 = fig.add_subplot(inner_grid[2, 1], sharex=ax9)
-    # plot_incidence_by_age(derived_outputs, ax11, 1, as_proportion=True)
-
-    # fig.savefig(os.path.join(output_folder, "tiling.png"), facecolor="white")
     fig.savefig(os.path.join(output_folder, "tiling.pdf"), facecolor="white")
 
     plt.close()

@@ -59,10 +59,10 @@ def add_variant_emergence(ax, iso3):
         d = get_first_variant_report_date(voc_name, iso3)
         ax.vlines(x=d, ymin=plot_ymin, ymax=plot_ymax, linestyle=linestyles[voc_name], color="grey")
 
+AGE_COLOURS = ["cornflowerblue", "slateblue", "mediumseagreen", "lightcoral", "purple"]
 
 def _plot_incidence_by_age(derived_outputs, ax, scenario, as_proportion: bool, legend=False):
-
-    colours = ["cornflowerblue", "slateblue", "mediumseagreen", "lightcoral", "purple"]
+   
     y_label = "Incidence prop." if as_proportion else "Daily infections"    
 
     scenario_name = {"baseline": "historical", "scenario_1": "counterfactual"}
@@ -92,7 +92,7 @@ def _plot_incidence_by_age(derived_outputs, ax, scenario, as_proportion: bool, l
         else: 
             new_running_total = age_group_incidence + running_total 
 
-        ax.fill_between(times, running_total, new_running_total, color=colours[i_age], label=age_group_name, zorder=2, alpha=.8)
+        ax.fill_between(times, running_total, new_running_total, color=AGE_COLOURS[i_age], label=age_group_name, zorder=2, alpha=.8)
         running_total = copy(new_running_total)
 
     y_max = max(new_running_total)
@@ -125,8 +125,8 @@ def _plot_incidence_by_age(derived_outputs, ax, scenario, as_proportion: bool, l
 
 
 def plot_inc_by_strain(derived_outputs, ax, as_prop=False, legend=False):
-
-    y_label = "Infection proportion" if as_prop else "N infections"
+    
+    y_label = "Infection proportion" if as_prop else "N infections by strain"
 
     output_name = "cumulative_incidence_prop" if as_prop else "cumulative_incidence"     
     strain_data = {s: [derived_outputs[sc][f"{output_name}Xstrain_{s}"].iloc[-1] for sc in ["baseline", "scenario_1"]] for s in ["wild_type", "delta", "omicron"]} 
@@ -142,6 +142,86 @@ def plot_inc_by_strain(derived_outputs, ax, as_prop=False, legend=False):
     )    
 
     ax.set_ylabel(y_label)
+
+    if legend:
+        ax.legend(
+            labelspacing=.2,
+            handlelength=1.,
+            handletextpad=.5,
+            columnspacing=1.,
+            facecolor="white",
+            ncol=2,
+            # bbox_to_anchor=(1.05, 1.05)
+        )
+    else:
+        ax.get_legend().remove()
+
+
+
+def cum_over50_fmt(tick_val):
+    if tick_val >= 1000000000:
+        val = round(tick_val/1000000000, 1)
+        if val.is_integer():
+            val = int(val)
+        return f"{val}G"
+    elif tick_val >= 1000000:
+        val = round(tick_val/1000000, 1)
+        if val.is_integer():
+            val = int(val)
+        return f"{val}M"
+    elif tick_val >= 1000:
+        val = round(tick_val / 1000, 1)
+        if val.is_integer():
+            val = int(val)
+        return f"{val}K"
+    elif 0. < tick_val < 1.:
+        return round(tick_val, 2)
+    else:
+        val = tick_val
+        if val.is_integer():
+            val = int(val)
+        return val
+
+
+def plot_cum_incidence_by_age(derived_outputs, ax, legend=False):
+    y_label = "N infections by age"
+    age_groups = [0, 15, 25, 50, 70]
+
+    age_inc_data = {str(agegroup): [derived_outputs[sc][f"incidenceXagegroup_{agegroup}"].sum() for sc in ["baseline", "scenario_1"]] for agegroup in age_groups} 
+    
+    df = pd.DataFrame(age_inc_data, index = ["Historical", "Counterfactual"])
+
+    column_names, colors = {}, {}
+    for i_age, age_group in enumerate(age_groups):
+        
+        if i_age < len(age_groups) - 1:
+            upper_age = age_groups[i_age + 1] - 1 if i_age < len(age_groups) - 1 else ""
+            c_name = f"{age_group}-{upper_age}"
+        else:
+            c_name = f"{age_group}+"
+
+        column_names[str(age_group)] = c_name
+        colors[c_name] = AGE_COLOURS[i_age]
+
+    df = df.rename(columns=column_names)
+
+    df.plot.bar(
+        stacked=True, 
+        ax=ax, 
+        color=colors, 
+        alpha=.8,
+        rot=0
+    )    
+
+    ax.set_ylabel(y_label)
+
+    for i_sc, sc in enumerate(["baseline", "scenario_1"]):
+        total_inc = derived_outputs[sc]["incidence"].sum()
+        n_under_50 = (derived_outputs[sc][f"incidenceXagegroup_0"] + derived_outputs[sc][f"incidenceXagegroup_15"] +  derived_outputs[sc][f"incidenceXagegroup_25"]).sum()
+        n_over_50 = total_inc - n_under_50
+
+        ax.plot([i_sc + .28, i_sc + .28], [n_under_50, total_inc], marker='_', lw=0, color='black', ms=3.)
+        ax.text(x=i_sc + .34, y=0.5 * (n_under_50 + total_inc), s=cum_over50_fmt(n_over_50), fontsize=7, rotation=90, va='center')
 
     if legend:
         ax.legend(
@@ -306,10 +386,14 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     # Top Left: deaths fit
     death_fit_ax = fig.add_subplot(inner_grid[0, 0])
     plot_model_fit_with_uncertainty(death_fit_ax, uncertainty_dfs['baseline'], "infection_deaths_ma7", iso3)
-    add_variant_emergence(death_fit_ax, iso3)
+    add_variant_emergence(death_fit_ax, iso3)    
     format_date_axis(death_fit_ax)
     remove_axes_box(death_fit_ax)
     ad_panel_number(death_fit_ax, "A")
+
+    # if iso3 in INCLUDED_COUNTRIES['national_sero']:
+    #     insert_inside_plot_for_sero(death_fit_ax, uncertainty_dfs['baseline'], iso3)
+
 
     # Middle Left: incidence by age
     inner_inner_grid = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=inner_grid[1, 0], hspace=.05)
@@ -331,14 +415,15 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
 
     # Bottom Left: Inc prop by strain
     inner_inner_grid = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=inner_grid[2, 0], wspace=.5)
-    for i_as_prop, as_prop in enumerate([False, True]):
-        inc_prop_strain_ax = fig.add_subplot(inner_inner_grid[0, i_as_prop])
-        plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, as_prop, legend=as_prop)
 
-        if not as_prop:   
-            inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
-            ad_panel_number(inc_prop_strain_ax, "C", x=-0.25)
+    inc_prop_age_ax = fig.add_subplot(inner_inner_grid[0, 0])
+    plot_cum_incidence_by_age(derived_outputs, inc_prop_age_ax)
+    inc_prop_age_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+    ad_panel_number(inc_prop_age_ax, "C", x=-0.25)
 
+    inc_prop_strain_ax = fig.add_subplot(inner_inner_grid[0, 1])
+    plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, False, legend=True)
+    inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
 
     # MIDDLE Column
     outer_cell = outer[0, 1]

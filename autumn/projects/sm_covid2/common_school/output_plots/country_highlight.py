@@ -346,7 +346,7 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
 
 
 
-def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, derived_outputs):
+def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, derived_outputs, include_country_name=False):
 
     plt.rcParams.update(
         {
@@ -374,10 +374,28 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
 
     country_name = INCLUDED_COUNTRIES['all'][iso3]
     fig = plt.figure(figsize=(10.5, 5), dpi=300) # crete an A4 figure
-    outer = gridspec.GridSpec(
-        1, 3, wspace=.25, width_ratios=(41, 41, 18), 
+    n_outer_rows = 2 if include_country_name else 1
+
+    super_outer = gridspec.GridSpec(
+        n_outer_rows, 1, height_ratios=(3, 97),
         left=0.125, right=0.97, bottom=0.06, top =.97   # this affects the outer margins of the saved figure 
     )
+    #### Top row with country name
+    if include_country_name:
+        ax1 = fig.add_subplot(super_outer[0, 0])
+        t = ax1.text(0.5,0.5, country_name, fontsize=16)
+        t.set_ha('center')
+        t.set_va('center')
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+
+    outer = gridspec.GridSpecFromSubplotSpec(
+        1, 3, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.25, width_ratios=(41, 41, 18)
+    )    
 
     # LEFT column
     outer_cell = outer[0, 0]

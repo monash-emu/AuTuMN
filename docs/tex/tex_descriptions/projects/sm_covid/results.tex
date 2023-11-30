@@ -1,14 +1,146 @@
 \section{Sensitivity analyses}
-\subsection{SA1: }
-\subsection{SA2: }
+
+\subsection{SA1: Increased household transmission during school closures}
+In this sensitivity analysis, we assumed that effective contact rates within households were increased during school closure periods. 
+Specifically, we assumed that each individual had 20\% more household contact potential when schools were fully closed.\\
+The results of this sensitivity analysis are presented in Figure \ref{fig:SA1_rel_outputs} and Figure \ref{fig:SA1_maps}.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/31902886_full_analysis_05Oct2023_increased_hh_contacts/COMMON_DIRECTORY/relative_outputs.pdf}
+    \end{center}
+    \caption{Relative impact of school closures on COVID-19 infections, deaths and peak hospital occupancy (SA1: increased household transmission during closures)} 
+    Results are presented as relative percentage reductions in COVID-19 infections (A), 
+    COVID-19 deaths (B), and peak hospital occupancy (C). The counterfactual ``schools open'' scenario was used as reference. 
+    Estimates are presented as medians (horizontal lines), interquartile ranges (boxes), and 95\% central credible intervals (vertical lines). 
+    Countries are listed in descending order from left to right, based on the estimated median effect for each disease indicator. See Table 1 to find the country associated with each ISO3 code. 
+    \label{fig:SA1_rel_outputs}
+\end{figure}
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/31902886_full_analysis_05Oct2023_increased_hh_contacts/COMMON_DIRECTORY/maps/combined_single_page.pdf}
+    \end{center}
+    \caption{Geographic representation of the effects of school closures on COVID-19 (SA1: increased household transmission during closures)} 
+    Results presented as median relative percentage reductions in SARS-CoV-2 infections (A), COVID-19 deaths (B), and peak hospital occupancy (C), due to school closures. The counterfactual “schools open” scenario was used as reference. Countries in light grey were not included in the analysis. Negative percentages indicate configurations where school closures are estimated to have had a negative impact on the considered indicator.
+    \label{fig:SA1_maps}
+\end{figure}
+
+
+
+\subsection{SA2: Google Mobility data not included}
+
+In this sensitivity analysis, we removed the contribution of Google Mobility data from our model.  
+Under this configuration, we exclusively rely on the non-mechanistic component (i.e., random process) to capture 
+mobility changes in locations other than households and schools.
+\\
+
+The results of this sensitivity analysis are presented in Figure \ref{fig:SA2_rel_outputs} and Figure \ref{fig:SA2_maps}.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/31915437_full_analysis_05Oct2023_no_google_mobility/COMMON_DIRECTORY/relative_outputs.pdf}
+    \end{center}
+    \caption{Relative impact of school closures on COVID-19 infections, deaths and peak hospital occupancy (SA2: no Google Mobility data)} 
+    Results are presented as relative percentage reductions in COVID-19 infections (A), 
+    COVID-19 deaths (B), and peak hospital occupancy (C). The counterfactual ``schools open'' scenario was used as reference. 
+    Estimates are presented as medians (horizontal lines), interquartile ranges (boxes), and 95\% central credible intervals (vertical lines). 
+    Countries are listed in descending order from left to right, based on the estimated median effect for each disease indicator. See Table 1 to find the country associated with each ISO3 code. 
+    \label{fig:SA2_rel_outputs}
+\end{figure}
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/31915437_full_analysis_05Oct2023_no_google_mobility/COMMON_DIRECTORY/maps/combined_single_page.pdf}
+    \end{center}
+    \caption{Geographic representation of the effects of school closures on COVID-19 (SA2: no Google Mobility data)} 
+    Results presented as median relative percentage reductions in SARS-CoV-2 infections (A), COVID-19 deaths (B), and peak hospital occupancy (C), due to school closures. The counterfactual “schools open” scenario was used as reference. Countries in light grey were not included in the analysis. Negative percentages indicate configurations where school closures are estimated to have had a negative impact on the considered indicator.
+    \label{fig:SA2_maps}
+\end{figure}
+
+
+
 
 \subsection{Output comparisons between analyses}
+In this section, we present side-by-side comparisons of the main outputs between the three analyses (Base-case, SA1 and SA2). 
+We present comparisons for the effect of school closures on infections (Figure \ref{fig:compare_infections}), deaths (Figure \ref{fig:compare_deaths}) and peak hospital occupancy (Figure \ref{fig:compare_hosp}).\\
+Finally, Figure \ref{fig:compare_median} provides overall comparisons across all countries analysed, considering the estimated median effects alone.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/analyses_compare_cases_averted_relative.pdf}
+    \end{center}
+    \caption{Comparison of school closure effects on SARS-CoV-2 infections} 
+    \label{fig:compare_infections}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/analyses_compare_deaths_averted_relative.pdf}
+    \end{center}
+    \caption{Comparison of school closure effects on COVID-19 deaths} 
+    \label{fig:compare_deaths}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/analyses_compare_delta_hospital_peak_relative.pdf}
+    \end{center}
+    \caption{Comparison of school closure effects on peak hospital occupancy} 
+    \label{fig:compare_hosp}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/analyses_median_deltas.pdf}
+    \end{center}
+    \caption{Relative difference between median estimated effects of school closures between the different analyses} 
+    \label{fig:compare_median}
+\end{figure}
+
+
+
+
+
 
 \subsection{Likelihood comparisons between analyses}
 
+In this section, we aimed to compare the ability of the different models to fit the data. For this, we present the values of the a-posteriori log-likelihood
+function (see Section \ref{calibration} for definition and Equation \ref{eq:acc_qtt}) obtained under the different configurations in Figure \ref{fig:compare_likelihood}.\\
 
+To better understand the differences observed in the a-posteriori log-likelihood values, we also presented the likelihood component that is 
+relevant to the time-variant random-process in Figure \ref{fig:compare_rp_likelihood} (see Section \ref{eq:random_process} for definition).
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/ll_compare_logposterior.pdf}
+    \end{center}
+    \caption{Comparison of a-posteriori log-likelihood values between analyses} 
+    The a-posteriori log-likelihood combines the model likelihood, the parameter priors and the random process likelihood. Higher values indicate 
+    more realistic model fits. Note that the quantity presented in Equation \ref{eq:acc_qtt} is not exactly the a-posteriori likelihood but a quantity that
+    is proportional to the latter. This is why the log-likelihood quantity presented here includes an offset.
+    \label{fig:compare_likelihood}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/analyses_compare_plots/ll_compare_ll_extra_ll.pdf}
+    \end{center}
+    \caption{Comparison of likelihood-components relevant to the time-variant random process} 
+    Higher values indicate less overall variability in the random-process.
+    \label{fig:compare_rp_likelihood}
+\end{figure}
+
+
+
+
+\clearpage
+\newpage
 \section{Detailed country-specific results}
-
 The next pages include detailed country-specific results for the 74 countries included in 
 our analysis, under the base-case configuration. Detailed country-specific results associated
 with the two sensitivity analyses (SA1 and SA2) are available online at \textcolor{red}{ADD LINK TO COUNTRY-SPECIFIC PROFILES SA1-2}.
@@ -25,4 +157,4 @@ You can access any country's outputs under the base-case configuration by clicki
     \textcolor{blue}{\hyperlink{profiles.\x}{\pgfmathparse{\countrynames[\x]}\pgfmathresult} } \tab 
 }
 
-\includepdf[pages=-,nup=2x2,frame=true,link=true,linkname=profiles]{../../../../user/rragonnet/remote_run_outputs/31747883_full_analysis_26Sep2023_main/COMMON_DIRECTORY/multi_tiling.pdf}
+\includepdf[pages=-,nup=1x2,frame=true,link=true,linkname=profiles, delta=20mm 20mm]{../../../../user/rragonnet/remote_run_outputs/31747883_full_analysis_26Sep2023_main/COMMON_DIRECTORY/multi_highlights.pdf}

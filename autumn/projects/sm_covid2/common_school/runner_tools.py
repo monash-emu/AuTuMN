@@ -278,7 +278,7 @@ def run_full_analysis(
 
             break
         except:
-            time.sleep(1)
+            sleep(1)
     
 
     # Early return if MCMC not requested
@@ -304,7 +304,7 @@ def run_full_analysis(
             make_post_mc_plots(idata, run_config['burn_in'], output_folder)
             break
         except:
-            time.sleep(1)
+            sleep(1)
 
     """ 
         Post-MCMC processes
@@ -334,7 +334,7 @@ def run_full_analysis(
             make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
             break
         except:
-            time.sleep(1)
+            sleep(1)
 
     return idata, unc_dfs, diff_quantiles_df
 
@@ -392,3 +392,10 @@ def download_analysis(run_path, open_out_dir=True):
     if open_out_dir:
         local_outpath = Path.home() / "Models" / "AuTuMN_new" / "data" / "outputs" / "runs" / run_path 
         os.startfile(local_outpath)
+
+
+
+
+
+if __name__ == '__main__':
+    _, _, _ = run_full_analysis('FRA', 'main', TEST_RUN_CONFIG, 'full_analysis_test')

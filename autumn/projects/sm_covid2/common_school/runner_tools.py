@@ -392,10 +392,3 @@ def download_analysis(run_path, open_out_dir=True):
     if open_out_dir:
         local_outpath = Path.home() / "Models" / "AuTuMN_new" / "data" / "outputs" / "runs" / run_path 
         os.startfile(local_outpath)
-
-
-
-
-
-if __name__ == '__main__':
-    _, _, _ = run_full_analysis('FRA', 'main', TEST_RUN_CONFIG, 'full_analysis_test')

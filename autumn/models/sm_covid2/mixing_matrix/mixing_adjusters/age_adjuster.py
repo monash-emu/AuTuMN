@@ -1,7 +1,6 @@
 from typing import Dict
 import numpy as np
 
-from autumn.models.sm_jax.parameters import TimeSeries
 from autumn.settings.constants import COVID_BASE_AGEGROUPS
 from autumn.model_features.curve import scale_up_function
 
@@ -25,7 +24,7 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
 
     """
 
-    def __init__(self, age_mixing: Dict[str, TimeSeries]):
+    def __init__(self, age_mixing):
         """
         Build the time-variant age adjustment functions.
         """

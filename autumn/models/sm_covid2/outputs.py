@@ -10,8 +10,6 @@ from autumn.model_features.agegroup import convert_param_agegroups
 from autumn.models.sm_covid2.parameters import TimeDistribution, VocComponent, AgeSpecificProps
 from .constants import IMMUNITY_STRATA, Compartment, ImmunityStratum
 from autumn.core.utils.utils import weighted_average
-from autumn.models.sm_jax.outputs import apply_odds_ratio_to_proportion
-
 
 from summer2.parameters import Function, Data, DerivedOutput
 from summer2.functions.derived import get_rolling_reduction
@@ -20,6 +18,29 @@ from summer2.functions.derived import get_rolling_reduction
 def gamma_cdf(shape, scale, x):
     return scipy.special.gammainc(shape, x / scale)
 
+
+def apply_odds_ratio_to_proportion(proportion: float, odds_ratio: float) -> float:
+    """
+    Use an odds ratio to adjust a proportion.
+
+    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
+    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
+    We want to multiply the odds associated with p1 by a certain odds ratio.
+    That, is we need to solve the following equation for p2:
+        p1 / (1 - p1) * OR = p2 / (1 - p2)
+    Solving the above for p2:
+        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+
+    Args:
+        proportion: The original proportion (p1 in the description above)
+        odds_ratio: The odds ratio to adjust by (OR above)
+    Returns:
+        The adjusted proportion (p2 above)
+
+    """
+
+    # Transform and return
+    return proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
 def get_immunity_prop_modifiers(
     source_pop_immunity_dist: Dict[str, float],

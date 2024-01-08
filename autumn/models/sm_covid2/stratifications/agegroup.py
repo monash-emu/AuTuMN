@@ -5,9 +5,8 @@ import itertools
 
 from summer2 import Stratification, Multiply
 
-from autumn.models.sm_jax.mixing_matrix import build_dynamic_mixing_matrix
-from autumn.models.sm_jax.parameters import Parameters
-from autumn.models.sm_jax.constants import FlowName
+from autumn.models.sm_covid2.mixing_matrix import build_dynamic_mixing_matrix
+from autumn.models.sm_covid2.constants import FlowName
 from autumn.core.inputs import get_population_by_agegroup
 from autumn.core.utils.utils import weighted_average
 
@@ -92,7 +91,7 @@ def convert_param_agegroups(
 
 
 def get_agegroup_strat(
-    params: Parameters,
+    params,
     age_groups: List[str],
     age_pops: pd.Series,
     matrices: np.array,

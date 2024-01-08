@@ -29,7 +29,7 @@ from .stratifications.strains import (
 )
 
 # Import modules from sm_sir model
-from autumn.models.sm_jax.stratifications.agegroup import (
+from .stratifications.agegroup import (
     convert_param_agegroups,
     get_agegroup_strat,
 )

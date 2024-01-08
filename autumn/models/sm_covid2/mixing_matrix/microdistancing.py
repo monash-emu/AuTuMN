@@ -2,8 +2,7 @@ from typing import Callable, Dict
 
 import numpy as np
 
-from autumn.models.sm_jax.parameters import MicroDistancingFunc
-from autumn.models.sm_jax.constants import LOCATIONS
+from autumn.models.sm_covid2.constants import LOCATIONS
 from autumn.model_features.curve import scale_up_function, tanh_based_scaleup
 from autumn.core.utils.utils import return_constant_value, get_product_two_functions
 from autumn.core.inputs.covid_survey.queries import get_percent_mc
@@ -13,7 +12,7 @@ ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool, iso3: str
+    params, square_mobility_effect: bool, iso3: str
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -82,7 +81,7 @@ def get_microdistancing_funcs(
     return final_adjustments
 
 
-def get_microdist_func_component(func_params: MicroDistancingFunc, iso3: str):
+def get_microdist_func_component(func_params, iso3: str):
     """
     Get a single function of time using the standard parameter request structure for any microdistancing function, or
     adjustment to a microdistancing function.

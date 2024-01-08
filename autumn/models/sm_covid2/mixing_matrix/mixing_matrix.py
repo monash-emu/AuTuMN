@@ -3,7 +3,6 @@ import numpy as np
 
 from jax import numpy as jnp
 
-from autumn.models.sm_jax.parameters import Country, Mobility
 from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
 from .microdistancing import get_microdistancing_funcs
 from .macrodistancing import get_mobility_funcs
@@ -14,7 +13,7 @@ from summer2.functions.util import capture_dict
 
 
 def build_dynamic_mixing_matrix(
-    base_matrices: Dict[str, np.ndarray], mobility: Mobility, country: Country,
+    base_matrices: Dict[str, np.ndarray], mobility, country,
     additional_mobility: dict = None, random_process_func=None, hh_contact_increase=0., 
     rp_affected_locations=["home", "school", "work", "other_locations"]
 ) -> Callable[[float], np.ndarray]:

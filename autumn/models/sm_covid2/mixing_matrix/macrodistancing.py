@@ -3,9 +3,8 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 import pandas as pd
 
-from autumn.models.sm_jax.constants import LOCATIONS
+from autumn.models.sm_covid2.constants import LOCATIONS
 from autumn.settings.constants import COVID_BASE_DATETIME
-from autumn.models.sm_jax.parameters import Country, MixingLocation
 from autumn.core.inputs.mobility.queries import get_mobility_data
 from autumn.core.utils.utils import apply_moving_average
 
@@ -65,7 +64,7 @@ def weight_mobility_data(
 
 
 def get_mobility_funcs(
-    country: Country,
+    country,
     region: str,
     additional_mobility: Dict[str, Tuple[np.ndarray, np.ndarray]],
     google_mobility_locations: Dict[str, Dict[str, float]],

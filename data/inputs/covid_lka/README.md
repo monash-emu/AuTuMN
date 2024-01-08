@@ -1,1 +1,0 @@
-The 'data.csv' file is obtain from Sri Lanka's COVID [dashboard](https://covid-19.health.gov.lk/dhis-web-commons/security/login.action). In the dashboard goto the pivot reports section and load the pre-configured report MONASH_AuTuMN. Once the report is refreshed with the latest data download it to this location.

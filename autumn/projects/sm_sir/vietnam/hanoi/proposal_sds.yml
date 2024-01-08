@@ -1,8 +1,0 @@
-infectious_seed: 13.313594929951137
-contact_rate: 0.00049321732723695
-testing_to_detection.assumed_tests_parameter: 0.0005183926677644682
-testing_to_detection.assumed_cdr_parameter: 0.008160792016459334
-age_stratification.cfr.multiplier: 0.005522593052399327
-age_stratification.prop_hospital.multiplier: 0.05032176731229876
-prop_icu_among_hospitalised: 0.004731042833137453
-voc_emergence.omicron.new_voc_seed.start_time: 35.0

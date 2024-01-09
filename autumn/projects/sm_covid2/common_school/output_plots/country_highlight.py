@@ -59,6 +59,16 @@ def add_variant_emergence(ax, iso3):
         d = get_first_variant_report_date(voc_name, iso3)
         ax.vlines(x=d, ymin=plot_ymin, ymax=plot_ymax, linestyle=linestyles[voc_name], color="grey")
 
+def add_vacc_coverage(ax, uncertainty_dfs):
+    vacc_axis = ax.twinx()
+    vacc_axis.plot(100.* uncertainty_dfs['baseline']['prop_immune_vaccinated']['0.5'], ls='-.', lw=1, color='black')
+    
+    vacc_axis.set_ylim((0., 100.))
+    vacc_axis.set_ylabel("% vaccinated")
+    vacc_axis.yaxis.set_label_coords(1.05, .5)
+    vacc_axis.spines['top'].set_visible(False)
+
+
 AGE_COLOURS = ["cornflowerblue", "slateblue", "mediumseagreen", "lightcoral", "purple"]
 
 def _plot_incidence_by_age(derived_outputs, ax, scenario, as_proportion: bool, legend=False):
@@ -394,7 +404,7 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
         ax1.spines['left'].set_visible(False)
 
     outer = gridspec.GridSpecFromSubplotSpec(
-        1, 3, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.25, width_ratios=(41, 41, 18)
+        1, 3, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.29, width_ratios=(41, 41, 18)
     )    
 
     # LEFT column
@@ -452,9 +462,16 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
         sc_compare_ax = fig.add_subplot(inner_grid[i_output, 0])
         _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=True)
         add_variant_emergence(sc_compare_ax, iso3)
+
+        if i_output == 3:
+            add_vacc_coverage(sc_compare_ax, uncertainty_dfs)
+
         format_date_axis(sc_compare_ax)
         remove_axes_box(sc_compare_ax)
         ad_panel_number(sc_compare_ax, ["D", "E", "F", "G"][i_output])
+
+
+
 
     # RIGHT Column
     outer_cell = outer[0, 2]
@@ -470,6 +487,6 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     diff_outputs_ax = fig.add_subplot(inner_grid[3, 0])
     _plot_diff_outputs(diff_outputs_ax, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"])
     remove_axes_box(diff_outputs_ax)
-    ad_panel_number(diff_outputs_ax, "K", x=-.3)
+    ad_panel_number(diff_outputs_ax, "K", x=-.27)
 
     return fig

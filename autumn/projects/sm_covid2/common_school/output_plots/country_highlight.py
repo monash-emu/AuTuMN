@@ -61,11 +61,11 @@ def add_variant_emergence(ax, iso3):
 
 def add_vacc_coverage(ax, uncertainty_dfs):
     vacc_axis = ax.twinx()
-    vacc_axis.plot(100.* uncertainty_dfs['baseline']['prop_immune_vaccinated']['0.5'], ls='-.', lw=1, color='black')
+    vacc_axis.plot(100.* uncertainty_dfs['baseline']['prop_immune_vaccinated']['0.5'], ls='-.', lw=1, color='black', zorder=-100)
     
     vacc_axis.set_ylim((0., 100.))
     vacc_axis.set_ylabel("% vaccinated")
-    vacc_axis.yaxis.set_label_coords(1.05, .5)
+    vacc_axis.yaxis.set_label_coords(1.05, .52)
     vacc_axis.spines['top'].set_visible(False)
 
 
@@ -384,10 +384,15 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
 
     country_name = INCLUDED_COUNTRIES['all'][iso3]
     fig = plt.figure(figsize=(10.5, 5), dpi=300) # crete an A4 figure
-    n_outer_rows = 2 if include_country_name else 1
+    if include_country_name:
+        n_outer_rows = 2
+        height_ratios = [3, 97]
+    else:
+        n_outer_rows = 1
+        height_ratios = [100]
 
     super_outer = gridspec.GridSpec(
-        n_outer_rows, 1, height_ratios=(3, 97),
+        n_outer_rows, 1, height_ratios=height_ratios,
         left=0.125, right=0.97, bottom=0.06, top =.97   # this affects the outer margins of the saved figure 
     )
     #### Top row with country name

@@ -1,9 +1,0 @@
-h1.ui.header,
-h2.ui.header,
-h3.ui.header {
-  text-transform: capitalize;
-}
-
-div.sub.header {
-  text-transform: none;
-}

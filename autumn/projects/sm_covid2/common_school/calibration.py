@@ -16,27 +16,6 @@ from autumn.projects.sm_covid2.common_school.project_maker import get_school_pro
 
 ANALYSES_NAMES = ["main", "no_google_mobility", "increased_hh_contacts"]
 
-
-def get_estival_uniform_priors(autumn_priors, _pymc_transform_eps_scale):
-    estival_priors = []
-    for prior_dict in autumn_priors:
-        assert prior_dict["distribution"] == "uniform", "Only uniform priors are currently supported"
-        
-        if not "random_process.delta_values" in prior_dict["param_name"] and not "dispersion_param" in prior_dict["param_name"]:
-            p = esp.UniformPrior(prior_dict["param_name"], prior_dict["distri_params"])
-            p._pymc_transform_eps_scale = _pymc_transform_eps_scale           
-            
-            estival_priors.append(
-                p
-            )
-            
-    ndelta_values = len([prior_dict for prior_dict in autumn_priors if prior_dict["param_name"].startswith("random_process.delta_values")])
-    
-    estival_priors.append(esp.UniformPrior("random_process.delta_values", [-2.0,2.0], ndelta_values + 1))
-    
-    return estival_priors
-
-
 def make_rp_loglikelihood_func(len_rp_delta_values, rp_noise_sd):
 
     def rp_loglikelihood(params):
@@ -55,7 +34,7 @@ def get_bcm_object(iso3, analysis="main", scenario='baseline', _pymc_transform_e
     assert scenario in ['baseline', 'scenario_1'], f"Requested scenario {scenario} not currently supported"
     
     project = get_school_project(iso3, analysis, scenario)
-    death_target_data = project.calibration.targets[0].data
+    death_target_data = project.death_target_data
 
     dispersion_prior = esp.UniformPrior("infection_deaths_dispersion_param", (200, 250))
     dispersion_prior._pymc_transform_eps_scale = _pymc_transform_eps_scale       
@@ -67,15 +46,9 @@ def get_bcm_object(iso3, analysis="main", scenario='baseline', _pymc_transform_e
             dispersion_param=dispersion_prior
         )
     ]
-    if len(project.calibration.targets) > 1:
-        sero_target = project.calibration.targets[1]
+    if project.sero_target is not None:
         targets.append(
-            est.TruncatedNormalTarget(
-                "prop_ever_infected_age_matched",
-                sero_target.data,
-                trunc_range=[0., 1.],
-                stdev=sero_target.stdev
-            )
+            project.sero_target
         )
 
     # Add a safeguard target to prevent a premature epidemic occurring before the first reported death
@@ -97,7 +70,7 @@ def get_bcm_object(iso3, analysis="main", scenario='baseline', _pymc_transform_e
     default_configuration = project.param_set.baseline
     m = project.build_model(default_configuration.to_dict()) 
 
-    priors = get_estival_uniform_priors(project.calibration.all_priors, _pymc_transform_eps_scale)
+    #priors = get_estival_uniform_priors(project.priors, _pymc_transform_eps_scale)
 
     default_params = m.builder.get_default_parameters()
 
@@ -105,6 +78,6 @@ def get_bcm_object(iso3, analysis="main", scenario='baseline', _pymc_transform_e
         len(default_params['random_process.delta_values']), 
         project.param_set.baseline['random_process']['noise_sd']
     )
-    bcm = BayesianCompartmentalModel(m, default_params, priors, targets, extra_ll=rp_ll)
+    bcm = BayesianCompartmentalModel(m, default_params, project.priors, targets, extra_ll=rp_ll)
 
     return bcm

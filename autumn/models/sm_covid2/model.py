@@ -8,7 +8,7 @@ from jax import numpy as jnp
 from computegraph.types import Function
 
 from autumn.core import inputs
-from autumn.core.project import Params, build_rel_path
+from autumn.core.project import Params#, build_rel_path
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat
 from autumn.model_features.jax.random_process import get_random_process
 from .outputs import SmCovidOutputsBuilder

@@ -19,9 +19,6 @@ import nevergrad as ng
 from estival.utils.parallel import map_parallel
 from estival.sampling import tools as esamp
 
-from autumn.core.runs import ManagedRun
-from autumn.infrastructure.remote import springboard
-
 from autumn.settings.folders import PROJECTS_PATH
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from autumn.projects.sm_covid2.common_school.project_maker import get_school_project
@@ -350,45 +347,3 @@ def custom_print(logger, s):
     else:
         print(timed_s)
 
-
-def dump_runner_details(runner, out_folder_path):
-    """
-    Dumps the run_path and IP associater with a SpringboardTaskRunner object
-    Args:
-        runner: SpringboardTaskRunner object
-        out_folder_path: pathlib Path associated with directory where data should be stored
-    """
-
-    details = {
-        "run_path": runner.run_path,
-        "ip": runner.instance['ip']
-    }
-
-    out_path = out_folder_path / f"{runner.run_path.split('/')[-1]}.yml"
-    with out_path.open("w") as f:
-        yaml.dump(details, f)
-
-
-def print_continuous_status(runner, update_freq=30):
-    status = runner.s3.get_status()
-    print(status)
-
-    while status in ['INIT', 'LAUNCHING']:
-        sleep(update_freq)
-        status = runner.s3.get_status()
-    print(status)
-
-    while status in ['RUNNING']:
-        sleep(update_freq)
-        status = runner.s3.get_status()
-    print(status)
-
-
-def download_analysis(run_path, open_out_dir=True):
-    mr = ManagedRun(run_path)
-    for f in mr.remote.list_contents():
-        mr.remote.download(f)
-
-    if open_out_dir:
-        local_outpath = Path.home() / "Models" / "AuTuMN_new" / "data" / "outputs" / "runs" / run_path 
-        os.startfile(local_outpath)

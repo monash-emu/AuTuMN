@@ -7,14 +7,14 @@ import os
 import yaml
 
 from autumn.core.project import (
-    Project,
+    #Project,
     ParameterSet,
     # build_rel_path,
     get_all_available_scenario_paths,
 )
-from autumn.calibration import Calibration
-from autumn.calibration.priors import UniformPrior
-from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget, TruncNormalTarget
+#from autumn.calibration import Calibration
+#from autumn.calibration.priors import UniformPrior
+#from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget, TruncNormalTarget
 from autumn.models.sm_covid2 import get_base_params, build_model
 from autumn.model_features.jax.random_process import set_up_random_process
 from autumn.settings import Region, Models
@@ -22,6 +22,8 @@ from autumn.core.inputs.demography.queries import get_iso3_from_country_name
 from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.settings.folders import INPUT_DATA_PATH, PROJECTS_PATH
+
+from estival import targets as est, priors as esp
 
 SERO_DATA_FOLDER = os.path.join(INPUT_DATA_PATH, "school-closure")
 with open(os.path.join(PROJECTS_PATH, "sm_covid2", "common_school", "included_countries.yml"), "r") as stream:
@@ -54,6 +56,19 @@ from pathlib import Path
 
 param_path = Path(__file__).parent.resolve() / "params"
 
+from dataclasses import dataclass
+from typing import Callable, List, Any, Optional
+
+@dataclass
+class Project:
+
+    iso3: str
+    build_model: Callable
+    param_set: ParameterSet
+    #calibration: Calibration
+    death_target_data: pd.Series
+    sero_target: Optional[est.BaseTarget]
+    priors: List
 
 def get_school_project(iso3, analysis="main", scenario='baseline'):
 
@@ -90,19 +105,15 @@ def get_school_project(iso3, analysis="main", scenario='baseline'):
     infection_deaths_target = infection_deaths_ma7.loc[first_date_with_death:model_end_time][::14]
     cumulative_deaths_target = cumulative_infection_deaths.loc[:model_end_time][-1:]
 
-    targets = [
-        NegativeBinomialTarget(
-            data=infection_deaths_target
-        )]
-        
     if positive_prop is not None:
-        targets.append(
-            TruncNormalTarget(
+        sero_target = est.TruncatedNormalTarget(
+                "prop_ever_infected_age_matched",
                 data=pd.Series(data=[positive_prop], index=[midpoint_as_int], name="prop_ever_infected_age_matched"),
                 trunc_range=(0., 1.),
                 stdev=sero_target_sd
             )          
-        )
+    else:
+        sero_target = None
 
     # set up random process if relevant
     if param_set.baseline.to_dict()["activate_random_process"]:
@@ -113,20 +124,22 @@ def get_school_project(iso3, analysis="main", scenario='baseline'):
             rp_params["order"],
             rp_params["time"]["step"],
         )
+        n_delta_values = len(rp.delta_values)
+        priors.append(esp.UniformPrior("random_process.delta_values", [-2.0,2.0], n_delta_values + 1))
     else:
         rp = None
 
     # create calibration object
-    calibration = Calibration(
-        priors=priors,
-        targets=targets,
-        random_process=rp,
-        metropolis_init="current_params",  # "lhs"
-        haario_scaling_factor=1.2, # 2.4,
-        fixed_proposal_steps=500,
-        metropolis_init_rel_step_size=0.1,
-        using_summer2=True,
-    )
+    # calibration = Calibration(
+    #     priors=priors,
+    #     targets=targets,
+    #     random_process=rp,
+    #     metropolis_init="current_params",  # "lhs"
+    #     haario_scaling_factor=1.2, # 2.4,
+    #     fixed_proposal_steps=500,
+    #     metropolis_init_rel_step_size=0.1,
+    #     using_summer2=True,
+    # )
 
     # List differential output requests
     diff_output_requests = [
@@ -154,13 +167,15 @@ def get_school_project(iso3, analysis="main", scenario='baseline'):
     # create the project object to be returned
     project = Project(
         iso3,
-        Models.SM_COVID2,
+        #Models.SM_COVID2,
         build_model,
         param_set,
-        calibration,
-        plots=timeseries,
-        diff_output_requests=diff_output_requests,
-        post_diff_output_requests=post_diff_output_requests,
+        infection_deaths_target,
+        sero_target,
+        priors,
+        #plots=timeseries,
+        #diff_output_requests=diff_output_requests,
+        #post_diff_output_requests=post_diff_output_requests,
     )
 
     return project
@@ -374,21 +389,21 @@ def get_school_project_priors(first_date_with_death, scenario):
     # max_seed_time = first_date_with_death - 1
 
     priors = [
-        UniformPrior("contact_rate", [0.01, 0.06]),
+        esp.UniformPrior("contact_rate", [0.01, 0.06]),
         # UniformPrior("infectious_seed_time", [min_seed_time, max_seed_time]),
-        UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
+        esp.UniformPrior("age_stratification.ifr.multiplier", [0.5, 1.5]),
 
         # VOC-related parameters
         # UniformPrior("voc_emergence.delta.new_voc_seed.time_from_gisaid_report", [-30, 30]),
         # UniformPrior("voc_emergence.omicron.new_voc_seed.time_from_gisaid_report", [-30, 30]),
 
         # Account for mixing matrix uncertainty
-        UniformPrior("school_multiplier", [0.8, 1.2]),
+        esp.UniformPrior("school_multiplier", [0.8, 1.2]),
     ]
 
     if scenario == 'baseline':
         priors.append(
-            UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.5])
+            esp.UniformPrior("mobility.unesco_partial_opening_value", [0.1, 0.5])
         )
 
     return priors

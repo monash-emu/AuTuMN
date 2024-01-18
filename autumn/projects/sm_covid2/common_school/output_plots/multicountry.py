@@ -10,7 +10,7 @@ import plotly.express as px
 import seaborn as sns
 
 YLAB_LOOKUP_SPLIT = {
-   "cases_averted_relative": "% infections averted<br>by school closure", 
+   "cases_averted_relative": "% infections averted<br>by school closure",    
    "deaths_averted_relative": "% deaths averted<br>by school closure",
    "delta_hospital_peak_relative": "Relative reduction in<br>peak hospital<br>occupancy (%)"
 }
@@ -75,8 +75,8 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
             y_max_abs = max(abs(q_975), y_max_abs)
             y_max_abs = max(abs(q_025), y_max_abs)
 
-            axis.set_xlim((0, n_countries + 1))
-            axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
+        axis.set_xlim((0, n_countries + 1))
+        axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
 
         axis.set_xticks(ticks=range(1, n_countries + 1), labels=sorted_iso3_list, rotation=90, fontsize=16)
 
@@ -390,3 +390,157 @@ def plot_relative_map_with_bins(diff_quantiles_dfs, req_output="cases_averted_re
     )
     
     return fig
+
+
+def get_n_weeks_closed(unesco_data, iso3):
+
+    n_weeks_closed, n_weeks_partial = (
+        unesco_data[unesco_data['country_id'] == iso3]["weeks_fully_closed"].max(),
+        unesco_data[unesco_data['country_id'] == iso3]["weeks_partially_open"].max(),
+    )
+
+    n_weeks_effectively_closed = n_weeks_closed + n_weeks_partial * .30
+    return n_weeks_effectively_closed
+
+from autumn.core.inputs.database import get_input_db
+import pycountry_convert as pc
+from matplotlib.lines import Line2D
+from mpl_toolkits.axes_grid1.inset_locator import (inset_axes, InsetPosition,
+                                                  mark_inset)
+
+continent_colors = {
+    "Asia": "orchid",
+    "Europe": "forestgreen",	
+	"South America": "orangered",
+	"North America": "slateblue",
+    "Africa": "cornflowerblue",
+	"Oceania": "orange",	
+}
+
+manual_label_shift = {
+	"HRV": (0, -10),
+	"PHL": (24 , 0),  # send to the right hand side  
+	"IRQ": (0., 5),
+	"BOL": (24 , 0),
+	"LKA": (24, 0),
+	"MYS": (24, 6),
+	"GTM": (0 ,-5),
+	"TUR": (2, 5),
+	"COL":(0, 5),
+	"IDN": (24, 0),
+	"ARG": (25, 0),
+	"POL": (23, 0),
+	"MKD": (12, -8),
+	# inset countries
+   "BEL": (5., 7.),
+   "FIN": (3., 5.),
+   "PRT": (22, 0.),
+   "DNK": (24, 5.),
+   "MDA": (0, -5),
+   "LTU": (0, 5.),
+   "DEU": (24, 0.),
+   "AUT": (2, 7),
+   "UKR": (0, -5),
+   "USA": (2, -5),
+   "GRC": (4, 7),
+   "GEO": (23, -5),
+
+   "HUN": (0, -5),
+   "ROU": (24, 0.),
+   "LVA": (24, -2.),
+   "BGR": (4, -6),
+   "BIH": (24, 0.),
+}
+
+def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=None, censored_yrange=None):
+
+    n_weeks_effectively_closed = get_n_weeks_closed(unesco_data, iso3)
+    data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
+
+    country_info = pc.country_alpha3_to_country_alpha2(iso3)
+    continent_code = pc.country_alpha2_to_continent_code(country_info)
+    continent_name = pc.convert_continent_code_to_continent_name(continent_code)
+	# median
+    axis.plot(n_weeks_effectively_closed, data.loc[0.5], zorder=3, marker="o", color=continent_colors[continent_name], ms=5)    
+    # IQR
+    q_75 = data.loc[0.75]
+    q_25 = data.loc[0.25]
+    axis.vlines(x=n_weeks_effectively_closed, ymin=q_25 , ymax=q_75, lw=0.5, color=continent_colors[continent_name], zorder=1)
+
+    annotate = True
+    if censored_xrange and censored_yrange:
+	    if (censored_xrange[0] <= n_weeks_effectively_closed <= censored_xrange[1]) and (censored_yrange[0] <= data.loc[0.5] <= censored_yrange[1]):
+		    annotate = False
+
+    if annotate:
+        xytext = [-4, 0]
+        if iso3 in manual_label_shift:
+            xytext[0] += manual_label_shift[iso3][0]
+            xytext[1] += manual_label_shift[iso3][1]
+
+        axis.annotate(
+			iso3, 
+			(n_weeks_effectively_closed, data.loc[0.5]), 
+			xytext=xytext, 
+			textcoords="offset points", va="center", ha="right", fontsize=8
+		)
+
+    return n_weeks_effectively_closed
+
+def make_icer_like_plot(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative"):
+
+    plt.rcParams["font.family"] = "Times New Roman"    
+    input_db = get_input_db()
+    unesco_data = input_db.query(
+       table_name="school_closure",
+       conditions={},
+       columns=[
+         "country_id",
+         "date",
+         "status",
+         "weeks_partially_open",
+         "weeks_fully_closed",
+         "enrolment_(pre-primary_to_upper_secondary)",
+       ],
+    )
+
+    fig, axis = plt.subplots(1, 1, figsize=(10, 5))
+    inset_xrange, inset_yrange = (14.5, 29.8), (-16, 37)
+
+    this_iso3_list = list(output_dfs_dict.keys())
+    x_max = 0.
+    for iso3 in this_iso3_list:
+       n_weeks_effectively_closed = add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=inset_xrange, censored_yrange=inset_yrange)
+       x_max = max(x_max, n_weeks_effectively_closed)
+
+    axis.hlines(y=0, xmin=0, xmax=x_max, color="grey", ls="--", lw=.8)
+    axis.set_xlim((0, x_max * 1.05))
+    axis.spines['top'].set_visible(False)
+    axis.spines['right'].set_visible(False)
+    
+	# inset
+    ax2 = plt.axes([0,0,1,1])
+
+    # Manually set the position and relative size of the inset axes within axis
+    ip = InsetPosition(axis, [0.05, -.66, 0.9, 0.5])
+    ax2.set_axes_locator(ip)
+    mark_inset(axis, ax2, loc1=1, loc2=2, fc="none", ec='silver', zorder=-100)
+
+    for iso3 in this_iso3_list:
+        add_icer_dots(unesco_data, iso3, output_dfs_dict, output, ax2)
+	
+    ax2.hlines(y=0, xmin=inset_xrange[0], xmax=inset_xrange[1], color="grey", ls="--", lw=.8)
+
+    ax2.set_xlim(inset_xrange)
+    ax2.set_ylim(inset_yrange)
+
+    labels_fs = 13
+    axis.set_xlabel("N weeks of school closure", fontsize = labels_fs)
+    axis.set_ylabel(YLAB_LOOKUP_SPLIT[output].replace("<br>", " "), fontsize = labels_fs)
+
+    leg_handles = [Line2D([0], [0], label=name, marker='o', markersize=7, 
+         markeredgecolor=color, markerfacecolor=color, linestyle='') for name, color in continent_colors.items()]
+    axis.legend(handles=leg_handles)
+
+    return fig
+

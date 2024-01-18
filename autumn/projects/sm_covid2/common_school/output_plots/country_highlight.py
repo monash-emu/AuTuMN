@@ -61,12 +61,16 @@ def add_variant_emergence(ax, iso3):
 
 def add_vacc_coverage(ax, uncertainty_dfs):
     vacc_axis = ax.twinx()
-    vacc_axis.plot(100.* uncertainty_dfs['baseline']['prop_immune_vaccinated']['0.5'], ls='-.', lw=1, color='black', zorder=-100)
+    vacc_axis.plot(100.* uncertainty_dfs['baseline']['prop_immune_vaccinated']['0.5'], ls='-.', lw=1, color='black', zorder=-100, label="vaccine coverage")
     
     vacc_axis.set_ylim((0., 100.))
     vacc_axis.set_ylabel("% vaccinated")
     vacc_axis.yaxis.set_label_coords(1.05, .52)
     vacc_axis.spines['top'].set_visible(False)
+
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = vacc_axis.get_legend_handles_labels()
+    vacc_axis.legend(lines + lines2, labels + labels2, loc='lower right', labelspacing=.3)
 
 
 AGE_COLOURS = ["cornflowerblue", "slateblue", "mediumseagreen", "lightcoral", "purple"]
@@ -464,8 +468,9 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
 
     # Now all the right panel plots for scenario comparisons
     for i_output, output in enumerate(["incidence", "hospital_occupancy", "infection_deaths_ma7", "prop_ever_infected"]):
+        include_main_ax_legend = i_output != 3
         sc_compare_ax = fig.add_subplot(inner_grid[i_output, 0])
-        _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=True)
+        _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=include_main_ax_legend)
         add_variant_emergence(sc_compare_ax, iso3)
 
         if i_output == 3:

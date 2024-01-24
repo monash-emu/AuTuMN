@@ -1,5 +1,6 @@
 from typing import List
 import pandas as pd
+from pathlib import Path
 
 from summer2 import CompartmentalModel
 from summer2.experimental.model_builder import ModelBuilder
@@ -7,10 +8,11 @@ from summer2.experimental.model_builder import ModelBuilder
 from jax import numpy as jnp
 from computegraph.types import Function
 
-from autumn.core import inputs
+from autumn.settings import INPUT_DATA_PATH
 from autumn.core.project import Params#, build_rel_path
 from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat
 from autumn.model_features.jax.random_process import get_random_process
+from .inputs import get_population_by_agegroup
 from .outputs import SmCovidOutputsBuilder
 from .parameters import Parameters, Sojourns, CompartmentSojourn
 from .constants import Compartment, REPLICABLE_COMPARTMENTS, FlowName
@@ -63,6 +65,21 @@ def set_infectious_seed(
         split_imports=True,
     )
 
+def get_unesco_data(iso3: str):
+    unesco_data = pd.read_parquet(Path(INPUT_DATA_PATH) / "school-closure/school_closure.parquet",
+        columns=[
+            "date",
+            "status",
+            "weeks_partially_open",
+            "weeks_fully_closed",
+            "enrolment_(pre-primary_to_upper_secondary)",
+            "country_id"
+        ],
+    )
+
+    country_data = unesco_data[unesco_data["country_id"]==iso3]
+
+    return country_data.drop(columns=["country_id"])
 
 def process_unesco_data(params: Parameters):
     """_summary_
@@ -72,19 +89,8 @@ def process_unesco_data(params: Parameters):
         params: The model parameters
 
     """
-    # Get the UNSECO school closures data
-    input_db = inputs.database.get_input_db()
-    unesco_data = input_db.query(
-        table_name="school_closure",
-        conditions={"country_id": params.country.iso3},
-        columns=[
-            "date",
-            "status",
-            "weeks_partially_open",
-            "weeks_fully_closed",
-            "enrolment_(pre-primary_to_upper_secondary)",
-        ],
-    )
+
+    unesco_data = get_unesco_data(params.country.iso3)
 
     # remove rows with identical closure status to make dataframe lighter
     def map_func(key):
@@ -254,7 +260,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
 
     # Get country population by age-group
     age_pops = pd.Series(
-        inputs.get_population_by_agegroup(age_groups, iso3, region, pop.year), index=age_groups
+        get_population_by_agegroup(age_groups, iso3, pop.year), index=age_groups
     )
 
     # Assign the population to compartments

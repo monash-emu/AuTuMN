@@ -6,11 +6,12 @@ import matplotlib.gridspec as gridspec
 import matplotlib.ticker as tick
 from copy import copy
 
-from autumn.core.inputs.database import get_input_db
+import pandas as pd
+
 from autumn.projects.sm_covid2.common_school.calibration import get_bcm_object
 from summer.utils import ref_times_to_dti
 
-from autumn.settings.folders import PROJECTS_PATH
+from autumn.settings.folders import PROJECTS_PATH, INPUT_DATA_PATH
 from pathlib import Path
 import yaml
 countries_path = Path(PROJECTS_PATH) / "sm_covid2" / "common_school" / "included_countries.yml"
@@ -65,9 +66,8 @@ title_lookup = {
 sc_colours = ["black", "crimson"]
 unc_sc_colours = ((0.2, 0.2, 0.8), (0.8, 0.2, 0.2), (0.2, 0.8, 0.2), (0.8, 0.8, 0.2), (0.8, 0.2, 0.2), (0.2, 0.8, 0.2), (0.8, 0.8, 0.2))
 
-input_db = get_input_db()
-unesco_data = input_db.query(
-    table_name='school_closure', 
+unesco_data = pd.read_parquet(
+    Path(INPUT_DATA_PATH) / "school-closure/school_closure.parquet",
     columns=["date", "status", "country_id"],
 )
 

@@ -5,8 +5,7 @@ import numpy as np
 
 from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
-from autumn.core.inputs import get_population_by_agegroup
-from autumn.core.inputs.demography.queries import _check_age_breakpoints
+from autumn.models.sm_covid2.inputs import get_population_by_agegroup, _check_age_breakpoints
 
 SOURCE_MATRICES_PATHS = {
     "socialmixr": os.path.join(INPUT_DATA_PATH, "social-mixing", "socialmixr_outputs"),

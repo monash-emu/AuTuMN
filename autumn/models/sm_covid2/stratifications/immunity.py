@@ -8,9 +8,10 @@ from summer2.parameters import Function, Data, Time
 
 from summer2.functions.util import piecewise_constant
 
-from autumn.core.inputs.database import get_input_db
 from autumn.models.sm_covid2.constants import IMMUNITY_STRATA, ImmunityStratum, FlowName
 from autumn.settings.constants import COVID_BASE_DATETIME
+
+from autumn.projects.sm_covid2.common_school.utils import get_owid_data
 
 SATURATION_COVERAGE = 0.80
 
@@ -62,6 +63,10 @@ def get_immunity_strat(
 
     return immunity_strat
 
+def get_vacc_data(iso3: str):
+    vacc_data = get_owid_data(columns=["date", "iso_code", "people_fully_vaccinated_per_hundred"], iso_code=iso3)
+
+    return vacc_data.dropna()
 
 def get_time_variant_vaccination_rates(iso3: str, age_pops: pd.Series):
     """
@@ -77,13 +82,7 @@ def get_time_variant_vaccination_rates(iso3: str, age_pops: pd.Series):
     total_pop = age_pops.sum()
 
     # Load vaccine coverage data and prepare pandas dataframe for calculations
-    input_db = get_input_db()
-    vacc_data = input_db.query(
-        table_name="owid",
-        conditions={"iso_code": iso3},
-        columns=["date", "people_fully_vaccinated_per_hundred"],
-    )
-    vacc_data.dropna(inplace=True)
+    vacc_data = get_vacc_data(iso3)
 
     effect_delay = 14
     vacc_data["date_int"] = (pd.to_datetime(vacc_data.date) - COVID_BASE_DATETIME).dt.days + effect_delay

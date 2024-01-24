@@ -3,8 +3,6 @@ import numpy as np
 
 from jax import numpy as jnp
 
-from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
-from .microdistancing import get_microdistancing_funcs
 from .macrodistancing import get_mobility_funcs
 
 from computegraph.types import Function

@@ -14,7 +14,7 @@ from autumn.settings.constants import (
     GOOGLE_MOBILITY_LOCATIONS,
     COVID_BASE_AGEGROUPS,
 )
-from autumn.core.inputs.social_mixing.constants import LOCATIONS
+#from autumn.core.inputs.social_mixing.constants import LOCATIONS
 
 
 from summer2.experimental.model_builder import (

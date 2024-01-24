@@ -17,9 +17,8 @@ from autumn.core.project import (
 #from autumn.calibration.targets import NegativeBinomialTarget, BinomialTarget, TruncNormalTarget
 from autumn.models.sm_covid2 import get_base_params, build_model
 from autumn.model_features.jax.random_process import set_up_random_process
+from autumn.projects.sm_covid2.common_school.utils import get_owid_data
 from autumn.settings import Region, Models
-from autumn.core.inputs.demography.queries import get_iso3_from_country_name
-from autumn.core.inputs.database import get_input_db
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.settings.folders import INPUT_DATA_PATH, PROJECTS_PATH
 
@@ -274,8 +273,7 @@ def resize_rp_delta_values(params):
         new_delta_values = rp_params['delta_values'][:n_expected_values]
         return params.update({"random_process": {"delta_values": new_delta_values}})
     else:
-        return params
-        
+        return params   
 
 def get_school_project_timeseries(iso3, sero_data):
     """
@@ -290,15 +288,16 @@ def get_school_project_timeseries(iso3, sero_data):
         timeseries: A dictionary containing the timeseries
     """
 
-    input_db = get_input_db()
+    #input_db = get_input_db()
     timeseries = {}
     """ 
     Start with OWID data
     """
     # read new daily deaths from inputs
-    data = input_db.query(
-        table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
-    )
+    #data = input_db.query(
+    #    table_name="owid", conditions={"iso_code": iso3}, columns=["date", "new_deaths"]
+    #)
+    data = get_owid_data(columns=["date", "iso_code", "new_deaths"], iso_code=iso3)
     data = remove_death_outliers(iso3, data)
     if iso3 == "VNM":  # remove early data points associated with few deaths prior to local transmission 
         data = data[pd.to_datetime(data["date"]) >= "15 May 2021"]
@@ -317,9 +316,10 @@ def get_school_project_timeseries(iso3, sero_data):
     }
 
     # Repeat same process for cumulated deaths
-    data = input_db.query(
-        table_name="owid", conditions={"iso_code": iso3}, columns=["date", "total_deaths"]
-    )
+    #data = input_db.query(
+    #    table_name="owid", conditions={"iso_code": iso3}, columns=["date", "total_deaths"]
+    #)
+    data = get_owid_data(columns=["date", "iso_code", "total_deaths"], iso_code=iso3)
     data.dropna(inplace=True)
 
     timeseries["cumulative_infection_deaths"] = {

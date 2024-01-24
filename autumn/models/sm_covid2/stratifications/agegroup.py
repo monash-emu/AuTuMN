@@ -7,7 +7,8 @@ from summer2 import Stratification, Multiply
 
 from autumn.models.sm_covid2.mixing_matrix import build_dynamic_mixing_matrix
 from autumn.models.sm_covid2.constants import FlowName
-from autumn.core.inputs import get_population_by_agegroup
+#from autumn.core.inputs import get_population_by_agegroup
+from autumn.models.sm_covid2.inputs import get_population_by_agegroup
 from autumn.core.utils.utils import weighted_average
 
 
@@ -69,7 +70,7 @@ def convert_param_agegroups(
     # Get default age brackets and the population structured with these default categories
     source_agebreaks = list(source_dict.keys())
     total_pops_5year_bands = get_population_by_agegroup(
-        source_agebreaks, iso3, region=region, year=2020
+        source_agebreaks, iso3, year=2020
     )
     total_pops_5year_dict = {age: pop for age, pop in zip(source_agebreaks, total_pops_5year_bands)}
 

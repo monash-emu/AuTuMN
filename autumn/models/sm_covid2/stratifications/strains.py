@@ -1,17 +1,20 @@
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
 from summer2 import CompartmentalModel, Stratification, Multiply, StrainStratification, Overwrite
 from summer2.parameters import Function, Time
 from typing import Dict, Union, List
 from jax import numpy as jnp
+import json
 
-from autumn.core.inputs.database import get_input_db
+from autumn.settings import INPUT_DATA_PATH
 from autumn.models.sm_covid2.parameters import VocComponent
 from autumn.models.sm_covid2.constants import FlowName, Compartment, ImmunityStratum
 from autumn.settings.constants import COVID_BASE_DATETIME
 from autumn.model_features.strains import broadcast_infection_flows_over_source
 
-from autumn.core.inputs.demography.queries import get_gisaid_country_name_from_iso3
+GISAID_NAME_MAP = json.load(open(Path(INPUT_DATA_PATH)/"gisaid-voc"/"gisaid_name_map.json",'r'))
+
 
 def voc_seed_func(time, entry_rate, start_time, seed_duration):
     offset = time - start_time
@@ -90,6 +93,14 @@ def get_strain_strat(
     return strain_strat
 
 
+
+def get_report_dates(variant:str, iso3: str):
+    df = pd.read_parquet(Path(INPUT_DATA_PATH) / "gisaid-voc/gisaid.parquet")
+
+    df = df[df["Country"] == GISAID_NAME_MAP[iso3]]
+    df = df[df["Value"] == variant]
+    return df["Week prior to"]
+
 def get_first_variant_report_date(variant: str, iso3: str):
     """
     Determines the first report date of a given variant in a given country
@@ -113,12 +124,7 @@ def get_first_variant_report_date(variant: str, iso3: str):
 
     assert variant in variants_map, f"Variant {variant} not available from current GISAID database"
 
-    input_db = get_input_db()
-    report_dates = input_db.query(
-        table_name="gisaid",
-        conditions={"Country": get_gisaid_country_name_from_iso3(iso3), "Value": variants_map[variant]},
-        columns=["Week prior to"],
-    )["Week prior to"]
+    report_dates = get_report_dates(variants_map[variant], iso3)
 
     # truncate data to retain only dates after WHO detection
     report_dates = report_dates[report_dates >= variants_global_emergence_date[variant]]

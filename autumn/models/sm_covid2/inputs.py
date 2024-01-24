@@ -309,6 +309,10 @@ def get_mobility_data(country_iso_code: str, base_date: datetime):
     The location map parameter transforms Google Mobility locations into Autumn-friendly locations.
     """
     mob_df = get_google_mobility(country_iso_code, base_date)
+    mov_df = get_movement_data(country_iso_code)
+
+    merge_how = "right" if len(mob_df) > 0 else "left"
+    mob_df = pd.merge(mov_df, mob_df, on="date", how=merge_how)
 
     mob_df["iso3"] = country_iso_code
     mob_df = mob_df.sort_values(["date"])
@@ -328,3 +332,26 @@ def get_google_mobility(country_iso_code, base_date):
     mob_df = mob_df[mob_df["date"] >= base_date]
     return mob_df
 
+def get_movement_data(country_iso_code: str):
+    """
+    Get daily Facebook mobility data for locations, for a given country.
+    Times are in days since a given base date.
+
+    """
+    mov_df = get_input_df("mobility/movement.parquet")
+    mov_df = mov_df[mov_df["country"] == country_iso_code]
+
+    mov_df["date"] = pd.to_datetime(mov_df["date"], format="%Y-%m-%d")
+    mov_df = mov_df.sort_values(["date"])
+    mov_df = mov_df.rename(
+        columns={
+            "all_day_bing_tiles_visited_relative_change": "tiles_visited",
+            "all_day_ratio_single_tile_users": "single_tile",
+        }
+    )
+    # mov_df = mov_df[mov_df["date"] >= base_date]
+    mov_df["tiles_visited"] += 1
+    mov_df["single_tile"] += 1
+    mov_df = mov_df.groupby(["date", "date_index"], as_index=False).mean()
+
+    return mov_df

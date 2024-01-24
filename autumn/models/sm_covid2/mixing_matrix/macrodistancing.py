@@ -93,7 +93,7 @@ def get_mobility_funcs(
     """
 
     
-    mob_df, google_mobility_days = get_mobility_data(country.iso3, COVID_BASE_DATETIME)
+    mob_df, google_mobility_days = get_mobility_data(country.iso3,COVID_BASE_DATETIME)
     model_loc_mobility_values = weight_mobility_data(mob_df, google_mobility_locations)
 
     # Currently the only options are to use raw mobility or 7-day moving average (although easy to change, of course)

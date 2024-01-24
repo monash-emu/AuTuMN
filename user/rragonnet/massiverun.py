@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 from time import time
 
-ANALYSIS = 'no_google_mobility'  # ["main", "no_google_mobility", "increased_hh_contacts"]
-RUN_CONFIG = DEFAULT_RUN_CONFIG
+ANALYSIS = 'main'  # ["main", "no_google_mobility", "increased_hh_contacts"]
+RUN_CONFIG = TEST_RUN_CONFIG
 
 if __name__ == "__main__":
     start_time = time()
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")  # previously "forkserver"
 
     # create parent output directory for multi-country analysis if required
-    analysis_name = "full_analysis_05Oct2023"
+    analysis_name = "test_full_analysis_24Jan2024"
     output_root_dir = Path.home() / "sh30/users/rragonnet/outputs/"
     array_job_id = sys.argv[1]  # common to all the tasks from this array job
     analysis_output_dir = output_root_dir / f"{array_job_id}_{analysis_name}_{ANALYSIS}"

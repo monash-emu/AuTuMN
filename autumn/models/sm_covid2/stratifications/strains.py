@@ -16,6 +16,11 @@ from autumn.model_features.strains import broadcast_infection_flows_over_source
 GISAID_NAME_MAP = json.load(open(Path(INPUT_DATA_PATH)/"gisaid-voc"/"gisaid_name_map.json",'r'))
 
 
+from autumn.settings import INPUT_DATA_PATH
+from pathlib import Path
+prepared_gisaid_csv_path = Path(INPUT_DATA_PATH) / "gisaid-voc/gisaid_variants_statistics_prepared.csv"
+
+
 def voc_seed_func(time, entry_rate, start_time, seed_duration):
     offset = time - start_time
     return jnp.where(offset > 0, jnp.where(offset < seed_duration, entry_rate, 0.0), 0.0)
@@ -93,44 +98,26 @@ def get_strain_strat(
     return strain_strat
 
 
-
-def get_report_dates(variant:str, iso3: str):
-    df = pd.read_parquet(Path(INPUT_DATA_PATH) / "gisaid-voc/gisaid.parquet")
-
-    df = df[df["Country"] == GISAID_NAME_MAP[iso3]]
-    df = df[df["Value"] == variant]
-    return df["Week prior to"]
-
-def get_first_variant_report_date(variant: str, iso3: str):
-    """
-    Determines the first report date of a given variant in a given country
-
-    Args:
-        variant: Name of the variant ('delta', 'omicron')
-        iso3: country's iso3
-
-    Returns:
-        Date of first report
-    """
-    variants_map = {
-        "delta": "VOC Delta GK (B.1.617.2+AY.*) first detected in India",
-        "omicron": "VOC Omicron GRA (B.1.1.529+BA.*) first detected in Botswana/Hong Kong/South Africa",
-    }
+def get_first_variant_report_date(variant: str, iso3: str, perc_threshold: float = 1.):
+   
+    colname = {
+        "delta": "Delta Count",
+        "omicron": "Omicron Count"
+    }[variant]
 
     variants_global_emergence_date = {
         "delta": datetime(2020, 10, 1),  # October 2020 according to WHO
         "omicron": datetime(2021, 11, 1),  # November 2021 according to WHO
     }
 
-    assert variant in variants_map, f"Variant {variant} not available from current GISAID database"
+    gisaid_data = pd.read_csv(prepared_gisaid_csv_path)
+    gisaid_data = gisaid_data[(gisaid_data[colname].isnull() == False) & (gisaid_data['Country'] == GISAID_NAME_MAP[iso3])]
 
-    report_dates = get_report_dates(variants_map[variant], iso3)
+    gisaid_data['Date'] = pd.to_datetime(gisaid_data['Date'])
+    gisaid_data['Percentage'] = 100. * gisaid_data[colname] / gisaid_data['Total']
 
-    # truncate data to retain only dates after WHO detection
+    report_dates = gisaid_data[(gisaid_data['Percentage'] >= perc_threshold) & (gisaid_data['Total'] > 10) & (gisaid_data[colname] > 1)]['Date']
     report_dates = report_dates[report_dates >= variants_global_emergence_date[variant]]
-
-    if len(report_dates) == 0:
-        return None
 
     return report_dates.min()
 

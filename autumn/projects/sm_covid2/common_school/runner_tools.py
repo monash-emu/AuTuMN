@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import qmc
 from time import sleep, time, localtime, strftime
+import pickle
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -254,6 +255,14 @@ def run_full_analysis(
     retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
     retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
     
+    # Calculate MLE derived outputs
+    mle_params = retained_best_params[0]   
+    derived_outputs = {}
+    for sc in ["baseline", "scenario_1"]:
+        sc_bcm = get_bcm_object(iso3, analysis=analysis, scenario=sc)
+        res = esamp.model_results_for_samples([mle_params], sc_bcm)
+        derived_outputs[sc] = res.results.xs(0, level="sample", axis=1)
+
     """ 
      --> Dump optimisation-related files and make associated plots
     """
@@ -268,6 +277,11 @@ def run_full_analysis(
             # Store retained optimal solutions
             with open(out_path / "retained_best_params.yml", "w") as f:
                 yaml.dump(retained_best_params, f)
+
+
+            with open(out_path / "derived_outputs.pickle", "wb") as f:
+                pickle.dump(derived_outputs, f)
+
             # Plot optimal solutions and matching starting points
             plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
             # Plot optimised model fits on a same figure
@@ -289,8 +303,14 @@ def run_full_analysis(
     n_repeat_seed = 1
     init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
     init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
-    idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])
+    idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])  
     custom_print(logger, "... MCMC completed")
+
+    custom_print(logger, "Computing likelihood values...")
+    burnt_idata = idata.sel(draw=range(run_config['burn_in'], idata.sample_stats.sizes['draw']))   
+    lle = esamp.likelihood_extras_for_idata(burnt_idata, bcm)
+    custom_print(logger, "... likelihood values computed.")
+
     
     """
      --> Dump MCMC output data and make post-MCMC plots
@@ -298,6 +318,7 @@ def run_full_analysis(
     for attempt in range(n_io_retries):
         try:
             idata.to_netcdf(out_path / "idata.nc")
+            lle.to_csv(out_path / f"lle_{iso3}_{analysis}.csv")
             make_post_mc_plots(idata, run_config['burn_in'], output_folder)
             break
         except:

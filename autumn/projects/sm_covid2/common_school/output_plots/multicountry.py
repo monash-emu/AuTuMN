@@ -4,6 +4,9 @@ import pandas as pd
 from math import floor, ceil
 from numpy import arange
 
+
+from autumn.models.sm_covid2.model import get_unesco_data
+
 import plotly.graph_objects as go
 import plotly.express as px
 
@@ -392,17 +395,16 @@ def plot_relative_map_with_bins(diff_quantiles_dfs, req_output="cases_averted_re
     return fig
 
 
-def get_n_weeks_closed(unesco_data, iso3):
+def get_n_weeks_closed(unesco_data):
 
     n_weeks_closed, n_weeks_partial = (
-        unesco_data[unesco_data['country_id'] == iso3]["weeks_fully_closed"].max(),
-        unesco_data[unesco_data['country_id'] == iso3]["weeks_partially_open"].max(),
+        unesco_data["weeks_fully_closed"].max(),
+        unesco_data["weeks_partially_open"].max(),
     )
 
     n_weeks_effectively_closed = n_weeks_closed + n_weeks_partial * .30
     return n_weeks_effectively_closed
 
-from autumn.core.inputs.database import get_input_db
 import pycountry_convert as pc
 from matplotlib.lines import Line2D
 from mpl_toolkits.axes_grid1.inset_locator import (inset_axes, InsetPosition,
@@ -454,7 +456,7 @@ manual_label_shift = {
 
 def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=None, censored_yrange=None):
 
-    n_weeks_effectively_closed = get_n_weeks_closed(unesco_data, iso3)
+    n_weeks_effectively_closed = get_n_weeks_closed(unesco_data)
     data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
     country_info = pc.country_alpha3_to_country_alpha2(iso3)
@@ -490,26 +492,13 @@ def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xra
 def make_icer_like_plot(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative"):
 
     plt.rcParams["font.family"] = "Times New Roman"    
-    input_db = get_input_db()
-    unesco_data = input_db.query(
-       table_name="school_closure",
-       conditions={},
-       columns=[
-         "country_id",
-         "date",
-         "status",
-         "weeks_partially_open",
-         "weeks_fully_closed",
-         "enrolment_(pre-primary_to_upper_secondary)",
-       ],
-    )
-
     fig, axis = plt.subplots(1, 1, figsize=(10, 5))
     inset_xrange, inset_yrange = (14.5, 29.8), (-16, 37)
 
     this_iso3_list = list(output_dfs_dict.keys())
     x_max = 0.
     for iso3 in this_iso3_list:
+       unesco_data = get_unesco_data(iso3)
        n_weeks_effectively_closed = add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=inset_xrange, censored_yrange=inset_yrange)
        x_max = max(x_max, n_weeks_effectively_closed)
 
@@ -527,6 +516,7 @@ def make_icer_like_plot(output_dfs_dict: dict[str, pd.DataFrame], output="deaths
     mark_inset(axis, ax2, loc1=1, loc2=2, fc="none", ec='silver', zorder=-100)
 
     for iso3 in this_iso3_list:
+        unesco_data = get_unesco_data(iso3)
         add_icer_dots(unesco_data, iso3, output_dfs_dict, output, ax2)
 	
     ax2.hlines(y=0, xmin=inset_xrange[0], xmax=inset_xrange[1], color="grey", ls="--", lw=.8)

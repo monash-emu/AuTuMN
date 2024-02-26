@@ -420,7 +420,7 @@ continent_colors = {
 }
 
 manual_label_shift = {
-	"HRV": (0, -10),
+	"HRV": (0, -5),
 	"PHL": (24 , 0),  # send to the right hand side  
 	"IRQ": (0., 5),
 	"BOL": (24 , 0),
@@ -428,17 +428,21 @@ manual_label_shift = {
 	"MYS": (24, 6),
 	"GTM": (0 ,-5),
 	"TUR": (2, 5),
-	"COL":(0, 5),
+	"COL": (24 , 0),
 	"IDN": (24, 0),
 	"ARG": (25, 0),
-	"POL": (23, 0),
+	"POL": (23, -5),
 	"MKD": (12, -8),
+   "MEX": (26 , 0),
+   "IND": (24 , 0),
+   "PER": (24 , 0),
+   "KEN": (24 , 0),
 	# inset countries
    "BEL": (5., 7.),
    "FIN": (3., 5.),
-   "PRT": (22, 0.),
+   "PRT": (22, 6.),
    "DNK": (24, 5.),
-   "MDA": (0, -5),
+   "MDA": (0, -10),
    "LTU": (0, 5.),
    "DEU": (24, 0.),
    "AUT": (2, 7),
@@ -446,17 +450,18 @@ manual_label_shift = {
    "USA": (2, -5),
    "GRC": (4, 7),
    "GEO": (23, -5),
-
    "HUN": (0, -5),
    "ROU": (24, 0.),
    "LVA": (24, -2.),
    "BGR": (4, -6),
    "BIH": (24, 0.),
+   "ZAF": (4, 5),
 }
 
 def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=None, censored_yrange=None):
 
     n_weeks_effectively_closed = get_n_weeks_closed(unesco_data)
+    print(f"{iso3}: {n_weeks_effectively_closed}")
     data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
     country_info = pc.country_alpha3_to_country_alpha2(iso3)
@@ -484,7 +489,7 @@ def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xra
 			iso3, 
 			(n_weeks_effectively_closed, data.loc[0.5]), 
 			xytext=xytext, 
-			textcoords="offset points", va="center", ha="right", fontsize=8
+			textcoords="offset points", va="center", ha="right", fontsize=8,zorder=100
 		)
 
     return n_weeks_effectively_closed

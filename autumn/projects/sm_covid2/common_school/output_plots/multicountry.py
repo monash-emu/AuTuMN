@@ -461,7 +461,6 @@ manual_label_shift = {
 def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xrange=None, censored_yrange=None):
 
     n_weeks_effectively_closed = get_n_weeks_closed(unesco_data)
-    print(f"{iso3}: {n_weeks_effectively_closed}")
     data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
     country_info = pc.country_alpha3_to_country_alpha2(iso3)

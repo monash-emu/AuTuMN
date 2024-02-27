@@ -3,9 +3,9 @@ History of vaccination was captured by stratifying all model compartments by vac
 Two vaccination strata were included to represent those who have received at least two doses of a COVID-19 vaccine,
 and those who have not.
 
-We used data from \textit{Our World in Data} to inform the modelled dynamic vaccination coverage. In particular, we used the reported proportion of 
-people ``fully vaccinated'' to specify the time-variant proportion of vaccinated people in our model. We assumed that older individuals are vaccinated 
-first by prioritising the modelled age groups in descending order. That is, the oldest age group receives all available vaccines until a 
+We used data from \textit{Our World in Data} to inform the modelled dynamic vaccination coverage \cite{mathieu2021}. In particular, we specified the time-variant proportion of vaccinated people 
+in our model using the reported proportion of people ``fully vaccinated'', defined as individuals who have received all doses for a prescribed vaccination protocol for a general population. We assumed that older individuals are vaccinated 
+first by prioritising the modelled age groups in descending order, to align with WHO policy to prioritise the vaccination of older adults within the general population \cite{whovax2020}. That is, the oldest age group receives all available vaccines until a 
 saturation coverage of 80\% is reached for this group. Then the next oldest category starts receiving vaccines and we repeat this process until all available vaccines
 are allocated. Note that in the event that the population-level vaccine coverage exceeds 80\%, the saturation coverage was set equal to the population-level coverage. 
 
@@ -34,9 +34,9 @@ Figure \ref{fig:vaccination} shows the modelled vaccination coverage over time a
     \label{fig:vaccination}
 \end{figure}
 
-The effect of vaccination on transmission is to reduce the rate of infection partially for all persons at-risk of infection in the vaccinated stratum.
+The effect of vaccination on transmission is to reduce the rate of infection partially for all persons at risk of infection in the vaccinated stratum.
 This includes both fully susceptible (never previously infected) persons,
 as well as recovered persons who are at risk of reinfection. The model allows for hybrid immunity
-in the sense that the vaccination-induced relative reduction of transmission risk is multiplied with that induced by previous infection. Vaccination is also assumed to reduce the risk of hospitalisation and death 
+in the sense that the vaccination-induced relative reduction of transmission risk is multiplied with that induced by previous infection. Vaccination is also assumed to reduce the risk of hospitalisation and death. 
 
 Emerging variants of concern (VoCs) may partially escape vaccine-induced (as well as infection-induced) immunity, as described further below (Table \ref{param_table} and Section \ref{strains}).

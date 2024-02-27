@@ -68,7 +68,7 @@ This quantity needs to be adjusted for the prior likelihood of the parameter set
 As we used uniform priors for all the parameters, the inclusion of the individual parameters' priors in the acceptance quantity is not necessary. 
 Indeed, their respective contributions would cancel out as the same quantity would appear in the numerator and the denominator of the 
 MCMC acceptance quantity ratio. However, the auto-regressive relationship described in Equation \ref{eq:random_process}
-must be accounted for as part of the combined prior likelihood of a parameter set. This prevents unrealistically large fluctuations of the random process.
+must be accounted for as part of the combined prior likelihood of a parameter set. This favours smaller fluctuations of the random process.
 If $W^\theta$ represents the random process associated with the parameter set $\theta$, the overall MCMC acceptance quantity is obtained by:
 
 \begin{equation}

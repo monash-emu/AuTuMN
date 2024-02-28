@@ -364,6 +364,10 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
 
 def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, derived_outputs, include_country_name=False):
 
+    # record background pd plotting backend and set to matplotlib 
+    background_pd_plot_backend = pd.options.plotting.backend
+    pd.options.plotting.backend = 'matplotlib'
+
     plt.rcParams.update(
         {
             'font.family':"Times New Roman",  
@@ -500,5 +504,8 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     _plot_diff_outputs(diff_outputs_ax, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"])
     remove_axes_box(diff_outputs_ax)
     ad_panel_number(diff_outputs_ax, "K", x=-.27)
+
+    # restore recorded plotting backend
+    pd.options.plotting.backend = background_pd_plot_backend
 
     return fig

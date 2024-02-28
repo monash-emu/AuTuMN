@@ -317,6 +317,8 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
     y_max_abs = 0.
     for i, diff_output in enumerate(output_names): 
 
+        assert diff_output.endswith("_relative"), "function only compatible with relative outputs"
+
         data = - 100. * diff_quantiles_df[diff_output] # use %. And use "-" so positive nbs indicate positive effect of closures
         x = 1 + i
         # median

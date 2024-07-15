@@ -1,5 +1,7 @@
 # AuTuMN
 
+## Note - this project is deprecated; new users should consult the EMU homepage https://monash-emu.github.io/
+
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
 
 This is a disease modelling project, written in Python.

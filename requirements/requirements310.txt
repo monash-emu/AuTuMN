@@ -83,4 +83,4 @@ tabulate
 fabric
 s3fs==0.4.2
 parallel-ssh
-cloudpickle
+cloudpickle==2.2.1

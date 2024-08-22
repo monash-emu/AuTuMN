@@ -114,7 +114,7 @@ def add_school_closure_patches(ax, iso3, ymax, school_colors=SCHOOL_COLORS):
     ax.vlines(closed_dates_str, ymin=0, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
 
 
-def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, include_legend=True):
+def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, include_legend=True, include_95=True):
 
     bcm = get_bcm_object(iso3, "main")
 
@@ -140,14 +140,15 @@ def plot_model_fit_with_uncertainty(axis, uncertainty_df, output_name, iso3, inc
         edgecolor=None,
         label="model (IQR)"
     )
-    axis.fill_between(
-        time, 
-        df['0.025'], df['0.975'],
-        color=colour, 
-        alpha=0.3,
-        edgecolor=None,
-        label="model (95% CI)",
-    )
+    if include_95:
+        axis.fill_between(
+            time, 
+            df['0.025'], df['0.975'],
+            color=colour, 
+            alpha=0.3,
+            edgecolor=None,
+            label="model (95% CI)",
+        )
 
     if output_name == "transformed_random_process":
         axis.set_ylim((0., axis.get_ylim()[1]))

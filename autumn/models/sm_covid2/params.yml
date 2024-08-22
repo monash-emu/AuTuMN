@@ -5,6 +5,8 @@ description: BASELINE
 country:
   iso3: PHL
 
+contact_matrix_used: conmat  # or mistry
+
 age_groups:
   - 0
   - 15

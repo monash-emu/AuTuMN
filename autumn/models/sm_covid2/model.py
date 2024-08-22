@@ -10,7 +10,7 @@ from computegraph.types import Function
 
 from autumn.settings import INPUT_DATA_PATH
 from autumn.core.project import Params#, build_rel_path
-from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat
+from autumn.core.inputs.social_mixing.build_synthetic_matrices import get_matrices_from_conmat, get_mistry_matrices
 from autumn.model_features.jax.random_process import get_random_process
 from .inputs import get_population_by_agegroup
 from .outputs import SmCovidOutputsBuilder
@@ -208,6 +208,7 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
     voc_params = params.voc_emergence
     time_params = params.time
     time_to_event_params = params.time_from_onset_to_event
+    contact_matrix_used = params.contact_matrix_used
 
     # Determine the lists of latent and infectious compartments based on replicate requests
     n_latent_comps = params.compartment_replicates["latent"]
@@ -359,7 +360,13 @@ def build_model(params: dict, build_options: dict = None, ret_builder=False) -> 
         sympt_props = sympt_req  # In which case it should be None or a float
 
     # Get the age-specific mixing matrices using conmat R package
-    raw_mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
+    if contact_matrix_used == "conmat":
+        raw_mixing_matrices = get_matrices_from_conmat(iso3, [int(age) for age in age_groups])
+    elif contact_matrix_used == "mistry":
+        raw_mixing_matrices = get_mistry_matrices(iso3)
+    else:
+        ValueError("Contact matrix type unsupported")
+
     # scale school contacts
     school_multiplier = params.school_multiplier    
     mixing_matrices = scale_school_contacts(raw_mixing_matrices, school_multiplier)

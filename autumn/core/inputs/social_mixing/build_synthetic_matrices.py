@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from copy import copy
 import numpy as np
+from pathlib import Path
 
 from autumn.settings.folders import INPUT_DATA_PATH
 from autumn.core.inputs.social_mixing.constants import LOCATIONS
@@ -383,3 +384,108 @@ def get_matrices_from_conmat(iso3, age_groups):
     mixing_matrices["all_locations"] = mixing_matrices["home"] + mixing_matrices["school"] + mixing_matrices["work"] + mixing_matrices["other_locations"]
 
     return mixing_matrices
+
+
+
+""" 
+Code to load, and process Mistry matrices
+"""
+raw_mistry_folder = Path(INPUT_DATA_PATH) / "raw_mistry_matrices"
+processed_mistry_folder = Path(INPUT_DATA_PATH) / "social-mixing" / "processed_mistry_matrices"
+
+mistry_countries = {
+    'AUS': 'Australia',
+    'AUT': 'Austria', 
+    'BGR': 'Bulgaria',
+    'CAN': 'Canada', 
+    'CZE': 'Czechia',
+    'DEU': 'Germany',
+    'DNK': 'Denmark',
+    'ESP': 'Spain',
+    'FIN': 'Finland',
+    'FRA': 'France',
+    'GBR': 'United Kingdom',
+    'GRC': 'Greece',
+    'HUN': 'Hungary',
+    'IND': 'India',
+    'IRL': 'Ireland',
+    'ISR': 'Israel',
+    'ITA': 'Italy',
+    'JPN': 'Japan', 
+    'LTU': 'Lithuania',
+    'NLD': 'Netherlands',
+    'PRT': 'Portugal',
+    'ROU': 'Romania',
+    'SVK': 'Slovakia',
+    'SVN': 'Slovenia',
+    'SWE': 'Sweden',
+    'USA': 'United States',
+    'ZAF': 'South Africa',
+    }
+
+alt_mistry_names = {
+    "CZE": "Czech",
+    "GBR": "United-Kingdom",
+    "USA": "United_States",
+    "ZAF": "South_Africa",
+}
+
+mistry_locations_map = {
+    "home": "household",
+    "school": "school",
+    "work": "work",
+    "other_locations": "community"
+}
+
+
+def process_mistry_matrices(iso3):
+
+    country = alt_mistry_names[iso3] if iso3 in alt_mistry_names else mistry_countries[iso3]
+
+    matrices = {}
+    for autumn_loc, mistry_loc in mistry_locations_map.items():    
+        filename = f"{country}_country_level_F_{mistry_loc}_setting_85.csv"
+        matrices[autumn_loc] = pd.read_csv(raw_mistry_folder / filename, header=None)
+
+    age_group_matching_matrices = convert_matrices_agegroups(
+        matrices,
+        source_age_breaks=range(85),
+        modelled_age_breaks=['0', '15', '25', '50', '70'],
+        modelled_country_iso3=iso3,
+        requested_locations=['home', 'school', 'work', 'other_locations']
+    )
+
+    mistry_coefs = {'home': 4.11, 'school': 11.44, 'work': 8.07, 'other_locations': 2.79}
+
+    model_ready_matrices = {}
+    for loc, coef in mistry_coefs.items():
+        model_ready_matrices[loc] = coef * age_group_matching_matrices[loc]
+
+    model_ready_matrices["all_locations"] = model_ready_matrices["home"] + model_ready_matrices["school"] + model_ready_matrices["work"] + model_ready_matrices["other_locations"]
+
+    # save numpy data 
+    np.savez(processed_mistry_folder / f"mistry_{iso3}.npz", **model_ready_matrices)
+
+
+def get_mistry_matrices(iso3, rescale_to_conmat=True):
+    # Load the dictionary from the .npz file
+    loaded_data = np.load(processed_mistry_folder / f"mistry_{iso3}.npz")
+    # Convert the loaded data back to a dictionary
+    mistry_matrices = {key: loaded_data[key] for key in loaded_data}
+
+    if rescale_to_conmat:
+        conmat_matrices = get_matrices_from_conmat(iso3, [int(age) for age in ['0', '15', '25', '50', '70']])
+        # Compute the eigenvalues
+        conmat_eigenvalues, _ = np.linalg.eig(conmat_matrices["all_locations"])
+        mistry_eigenvalues, _ = np.linalg.eig(mistry_matrices["all_locations"])
+
+        # Calculate the spectral radius (maximum absolute value of eigenvalues) and ratio between two approaches
+        conmat_sp_radius = max(abs(conmat_eigenvalues))
+        mistry_sp_radius = max(abs(mistry_eigenvalues))
+        ratio = conmat_sp_radius / mistry_sp_radius
+
+        # rescale mistry matrices
+        for loc in mistry_matrices:
+            mistry_matrices[loc] = ratio * mistry_matrices[loc]
+
+    return mistry_matrices

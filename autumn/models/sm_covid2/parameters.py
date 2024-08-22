@@ -380,6 +380,7 @@ class Parameters(ParamStruct):
     # Metadata
     description: Optional[str]
     country: Country
+    contact_matrix_used: str
     population: Population
     age_groups: List[int]
     time: Time

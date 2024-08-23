@@ -362,6 +362,21 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
 
 
 
+def plot_rp_vs_school_closures(ax, uncertainty_dfs, iso3):
+
+    ax.set_ylim((0,2))
+  
+    ax.plot(uncertainty_dfs['baseline']['transformed_random_process']['0.5'], lw=0)
+    # uncertainty_dfs['baseline']['transformed_random_process']['0.5'].plot(lw=0) # dummy plot
+    # ax.set_xlim(("Mar 2020", "Jul 2022"))
+    _add_school_closure_patches(ax, iso3, 'baseline')
+    plot_model_fit_with_uncertainty(ax, uncertainty_dfs['baseline'], 'transformed_random_process', iso3, include_legend=False, include_95=False)
+
+    ax.set_xlabel("")
+    ax.set_ylabel("Random process adjustment")
+
+
+
 def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, derived_outputs, include_country_name=False):
 
     # record background pd plotting backend and set to matplotlib 
@@ -504,6 +519,182 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     _plot_diff_outputs(diff_outputs_ax, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"])
     remove_axes_box(diff_outputs_ax)
     ad_panel_number(diff_outputs_ax, "K", x=-.27)
+
+    # restore recorded plotting backend
+    pd.options.plotting.backend = background_pd_plot_backend
+
+    return fig
+
+
+
+def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles_df, derived_outputs, include_country_name=False):
+
+    # record background pd plotting backend and set to matplotlib 
+    background_pd_plot_backend = pd.options.plotting.backend
+    pd.options.plotting.backend = 'matplotlib'
+
+    plt.rcParams.update(
+        {
+            'font.family':"Times New Roman",  
+            'font.size': 6,
+            'axes.titlesize': "large",
+            'axes.labelsize': "large",
+            'xtick.labelsize': 'large',
+            'ytick.labelsize': 'large',
+            'legend.fontsize': 7,  # 'large', # 'medium',
+            'legend.title_fontsize': 7, # 'large',
+            'lines.linewidth': 1.,
+
+            'xtick.major.size':    2.5,
+            'xtick.major.width':   0.6,
+            'xtick.major.pad':     2,
+
+            'ytick.major.size':    2.5,
+            'ytick.major.width':   0.6,
+            'ytick.major.pad':     2,
+
+            'axes.labelpad':      2.
+        }
+    )
+
+    country_name = INCLUDED_COUNTRIES['all'][iso3]
+    fig = plt.figure(figsize=(6, 5), dpi=300)
+    if include_country_name:
+        n_outer_rows = 2
+        height_ratios = [3, 97]
+    else:
+        n_outer_rows = 1
+        height_ratios = [100]
+
+    super_outer = gridspec.GridSpec(
+        n_outer_rows, 1, height_ratios=height_ratios,
+        left=0.125, right=0.97, bottom=0.06, top =.97   # this affects the outer margins of the saved figure 
+    )
+    #### Top row with country name
+    if include_country_name:
+        ax1 = fig.add_subplot(super_outer[0, 0])
+        t = ax1.text(0.5,0.5, country_name, fontsize=16)
+        t.set_ha('center')
+        t.set_va('center')
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+        ax1.spines['top'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        ax1.spines['bottom'].set_visible(False)
+        ax1.spines['left'].set_visible(False)
+
+    outer = gridspec.GridSpecFromSubplotSpec(
+        1, 2, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.29, width_ratios=(70, 30)
+    )    
+
+    # LEFT column
+    outer_cell = outer[0, 0]
+    inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3, height_ratios=(1, 1, 1, 1))
+
+    # Top Left: deaths fit
+    death_fit_ax = fig.add_subplot(inner_grid[0, 0])
+    plot_model_fit_with_uncertainty(death_fit_ax, uncertainty_dfs['baseline'], "infection_deaths_ma7", iso3)
+    add_variant_emergence(death_fit_ax, iso3)    
+    format_date_axis(death_fit_ax)
+    remove_axes_box(death_fit_ax)
+    ad_panel_number(death_fit_ax, "A")
+
+    # if iso3 in INCLUDED_COUNTRIES['national_sero']:
+    #     insert_inside_plot_for_sero(death_fit_ax, uncertainty_dfs['baseline'], iso3)
+
+    # 2nd and 3rd from top Left: scenario compare death and prop ever infected
+    for i_output, output in enumerate(["infection_deaths_ma7", "prop_ever_infected"]):
+        include_main_ax_legend = i_output != 1
+        sc_compare_ax = fig.add_subplot(inner_grid[i_output + 1, 0])
+        _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=include_main_ax_legend)
+        add_variant_emergence(sc_compare_ax, iso3)
+
+        if i_output == 1:
+            add_vacc_coverage(sc_compare_ax, uncertainty_dfs)
+
+        format_date_axis(sc_compare_ax)
+        remove_axes_box(sc_compare_ax)
+        ad_panel_number(sc_compare_ax, ["B", "C"][i_output])
+
+    rp_ax = fig.add_subplot(inner_grid[3, 0])
+    plot_rp_vs_school_closures(rp_ax, uncertainty_dfs, iso3)
+    format_date_axis(rp_ax)
+    remove_axes_box(rp_ax)
+    ad_panel_number(rp_ax, "D")
+
+    # Right column
+    outer_cell = outer[0, 1]
+    inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3)
+    
+    for i_output, output in enumerate(["cumulative_infection_deaths", "peak_hospital_occupancy"]): 
+        boxplot_ax = fig.add_subplot(inner_grid[i_output, 0])
+        plot_final_size_compare(boxplot_ax, uncertainty_dfs, output)
+        remove_axes_box(boxplot_ax) 
+        ad_panel_number(boxplot_ax, ["E", "F"][i_output], x=-.33)
+
+
+    inc_prop_age_ax = fig.add_subplot(inner_grid[2, 0])
+    plot_cum_incidence_by_age(derived_outputs, inc_prop_age_ax)
+    inc_prop_age_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+    ad_panel_number(inc_prop_age_ax, "G", x=-0.25)
+
+    inc_prop_age_ax.text(0, 0, "ADD LEGEND", fontsize=10)
+
+
+
+    inc_prop_strain_ax = fig.add_subplot(inner_grid[3, 0])
+    plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, False, legend=True)
+    inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+
+
+    # # Bottom Left: Inc prop by strain
+    # inner_inner_grid = gridspec.GridSpecFromSubplotSpec(1, 2, subplot_spec=inner_grid[2, 0], wspace=.5)
+
+    # inc_prop_age_ax = fig.add_subplot(inner_inner_grid[0, 0])
+    # plot_cum_incidence_by_age(derived_outputs, inc_prop_age_ax)
+    # inc_prop_age_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+    # ad_panel_number(inc_prop_age_ax, "C", x=-0.25)
+
+    # inc_prop_strain_ax = fig.add_subplot(inner_inner_grid[0, 1])
+    # plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, False, legend=True)
+    # inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+
+    # # MIDDLE Column
+    # outer_cell = outer[0, 1]
+    # inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3)
+
+    # # Now all the right panel plots for scenario comparisons
+    # for i_output, output in enumerate(["incidence", "hospital_occupancy", "infection_deaths_ma7", "prop_ever_infected"]):
+    #     include_main_ax_legend = i_output != 3
+    #     sc_compare_ax = fig.add_subplot(inner_grid[i_output, 0])
+    #     _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=include_main_ax_legend)
+    #     add_variant_emergence(sc_compare_ax, iso3)
+
+    #     if i_output == 3:
+    #         add_vacc_coverage(sc_compare_ax, uncertainty_dfs)
+
+    #     format_date_axis(sc_compare_ax)
+    #     remove_axes_box(sc_compare_ax)
+    #     ad_panel_number(sc_compare_ax, ["D", "E", "F", "G"][i_output])
+
+
+
+
+    # # RIGHT Column
+    # outer_cell = outer[0, 2]
+    # inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3)
+
+    # # Now all the right panel plots for scenario comparisons
+    # for i_output, output in enumerate(["cumulative_incidence", "peak_hospital_occupancy", "cumulative_infection_deaths"]): 
+    #     boxplot_ax = fig.add_subplot(inner_grid[i_output, 0])
+    #     plot_final_size_compare(boxplot_ax, uncertainty_dfs, output)
+    #     remove_axes_box(boxplot_ax) 
+    #     ad_panel_number(boxplot_ax, ["H", "I", "J"][i_output], x=-.33)
+        
+    # diff_outputs_ax = fig.add_subplot(inner_grid[3, 0])
+    # _plot_diff_outputs(diff_outputs_ax, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"])
+    # remove_axes_box(diff_outputs_ax)
+    # ad_panel_number(diff_outputs_ax, "K", x=-.27)
 
     # restore recorded plotting backend
     pd.options.plotting.backend = background_pd_plot_backend

@@ -6,7 +6,7 @@ all:
   BGD: Bangladesh
   BGR: Bulgaria
   BIH: Bosnia and Herzegovina
-  BOL: Bolivia, Plurinational State of
+  BOL: Bolivia Plurinational State of
   BRA: Brazil
   CAN: Canada
   CHL: Chile
@@ -37,13 +37,13 @@ all:
   JPN: Japan
   KAZ: Kazakhstan
   KEN: Kenya
-  KOR: Korea, Republic of
+  KOR: Korea Republic of
   LBN: Lebanon
   LKA: Sri Lanka
   LTU: Lithuania
   LVA: Latvia
   MAR: Morocco
-  MDA: Moldova, Republic of
+  MDA: Moldova Republic of
   MEX: Mexico
   MKD: North Macedonia
   MMR: Myanmar
@@ -69,7 +69,7 @@ all:
   UKR: Ukraine
   URY: Uruguay
   USA: United States
-  VEN: Venezuela, Bolivarian Republic of
+  VEN: Venezuela Bolivarian Republic of
   VNM: Viet Nam
   ZAF: South Africa
   ZWE: Zimbabwe
@@ -99,13 +99,41 @@ national_sero:
   JPN: Japan
   KAZ: Kazakhstan
   KEN: Kenya
-  KOR: Korea, Republic of
+  KOR: Korea Republic of
   LBN: Lebanon
   LTU: Lithuania
   MEX: Mexico
   NPL: Nepal
   PAK: Pakistan
   PRT: Portugal
+  SVN: Slovenia
+  SWE: Sweden
+  USA: United States
+  ZAF: South Africa
+mistry:
+  AUS: Australia
+  AUT: Austria 
+  BGR: Bulgaria
+  CAN: Canada 
+  CZE: Czechia
+  DEU: Germany
+  DNK: Denmark
+  ESP: Spain
+  FIN: Finland
+  FRA: France
+  GBR: United Kingdom
+  GRC: Greece
+  HUN: Hungary
+  IND: India
+  IRL: Ireland
+  ISR: Israel
+  ITA: Italy
+  JPN: Japan 
+  LTU: Lithuania
+  NLD: Netherlands
+  PRT: Portugal
+  ROU: Romania
+  SVK: Slovakia
   SVN: Slovenia
   SWE: Sweden
   USA: United States

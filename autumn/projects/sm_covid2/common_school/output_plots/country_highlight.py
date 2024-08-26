@@ -65,7 +65,7 @@ def add_vacc_coverage(ax, uncertainty_dfs):
     
     vacc_axis.set_ylim((0., 100.))
     vacc_axis.set_ylabel("% vaccinated")
-    vacc_axis.yaxis.set_label_coords(1.05, .52)
+    vacc_axis.yaxis.set_label_coords(1.06, .52)
     vacc_axis.spines['top'].set_visible(False)
 
     lines, labels = ax.get_legend_handles_labels()
@@ -157,14 +157,19 @@ def plot_inc_by_strain(derived_outputs, ax, as_prop=False, legend=False):
 
     ax.set_ylabel(y_label)
 
+    ymax = max([derived_outputs[sc][output_name].iloc[-1] for sc in ["baseline", "scenario_1"]])
+    ax.set_ylim((0, ymax * 1.3))
+
     if legend:
         ax.legend(
             labelspacing=.2,
             handlelength=1.,
             handletextpad=.5,
-            columnspacing=1.,
+            columnspacing=.6,
             facecolor="white",
-            ncol=2,
+            ncol=3,
+            loc='upper center', bbox_to_anchor=(0.5, 1.03),
+            fontsize=6,
             # bbox_to_anchor=(1.05, 1.05)
         )
     else:
@@ -229,6 +234,7 @@ def plot_cum_incidence_by_age(derived_outputs, ax, legend=False):
 
     ax.set_ylabel(y_label)
 
+    ymax = 0
     for i_sc, sc in enumerate(["baseline", "scenario_1"]):
         total_inc = derived_outputs[sc]["incidence"].sum()
         n_under_50 = (derived_outputs[sc][f"incidenceXagegroup_0"] + derived_outputs[sc][f"incidenceXagegroup_15"] +  derived_outputs[sc][f"incidenceXagegroup_25"]).sum()
@@ -237,6 +243,11 @@ def plot_cum_incidence_by_age(derived_outputs, ax, legend=False):
         ax.plot([i_sc + .28, i_sc + .28], [n_under_50, total_inc], marker='_', lw=0, color='black', ms=3.)
         ax.text(x=i_sc + .34, y=0.5 * (n_under_50 + total_inc), s=cum_over50_fmt(n_over_50), fontsize=7, rotation=90, va='center')
 
+        if total_inc > ymax:
+            ymax = total_inc
+
+    ax.set_ylim((0, ymax * 1.45))
+
     if legend:
         ax.legend(
             labelspacing=.2,
@@ -244,8 +255,9 @@ def plot_cum_incidence_by_age(derived_outputs, ax, legend=False):
             handletextpad=.5,
             columnspacing=1.,
             facecolor="white",
-            ncol=2,
-            # bbox_to_anchor=(1.05, 1.05)
+            ncol=3,
+            loc='upper center', bbox_to_anchor=(0.5, 1.03),
+            fontsize=6,
         )
     else:
         ax.get_legend().remove()
@@ -584,7 +596,7 @@ def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles
         ax1.spines['left'].set_visible(False)
 
     outer = gridspec.GridSpecFromSubplotSpec(
-        1, 2, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.29, width_ratios=(70, 30)
+        1, 2, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.33, width_ratios=(70, 30)
     )    
 
     # LEFT column
@@ -634,17 +646,14 @@ def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles
 
 
     inc_prop_age_ax = fig.add_subplot(inner_grid[2, 0])
-    plot_cum_incidence_by_age(derived_outputs, inc_prop_age_ax)
+    plot_cum_incidence_by_age(derived_outputs, inc_prop_age_ax, legend=True)
     inc_prop_age_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
     ad_panel_number(inc_prop_age_ax, "G", x=-0.25)
-
-    inc_prop_age_ax.text(0, 0, "ADD LEGEND", fontsize=10)
-
-
 
     inc_prop_strain_ax = fig.add_subplot(inner_grid[3, 0])
     plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, False, legend=True)
     inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
+    ad_panel_number(inc_prop_age_ax, "H", x=-0.25)
 
 
     # # Bottom Left: Inc prop by strain

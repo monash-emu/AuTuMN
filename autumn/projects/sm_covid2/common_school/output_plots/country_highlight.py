@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from math import ceil
 from pathlib import Path
 
 from matplotlib import pyplot as plt 
@@ -246,7 +247,8 @@ def plot_cum_incidence_by_age(derived_outputs, ax, legend=False):
         if total_inc > ymax:
             ymax = total_inc
 
-    ax.set_ylim((0, ymax * 1.45))
+    ymax_scaler = 1.45 if legend else 1.2
+    ax.set_ylim((0, ymax * ymax_scaler))
 
     if legend:
         ax.legend(
@@ -376,8 +378,11 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
 
 def plot_rp_vs_school_closures(ax, uncertainty_dfs, iso3):
 
-    ax.set_ylim((0,2))
-  
+ 
+    max_rp = uncertainty_dfs['baseline']['transformed_random_process']['0.75'][-1]
+    ymax = max([2., ceil(max_rp)])
+    ax.set_ylim((0, ymax))
+
     ax.plot(uncertainty_dfs['baseline']['transformed_random_process']['0.5'], lw=0)
     # uncertainty_dfs['baseline']['transformed_random_process']['0.5'].plot(lw=0) # dummy plot
     # ax.set_xlim(("Mar 2020", "Jul 2022"))
@@ -500,7 +505,7 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3)
 
     # Now all the right panel plots for scenario comparisons
-    for i_output, output in enumerate(["incidence", "hospital_occupancy", "infection_deaths_ma7", "prop_ever_infected"]):
+    for i_output, output in enumerate(["incidence", "infection_deaths_ma7", "prop_ever_infected"]):
         include_main_ax_legend = i_output != 3
         sc_compare_ax = fig.add_subplot(inner_grid[i_output, 0])
         _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=include_main_ax_legend)
@@ -511,10 +516,13 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
 
         format_date_axis(sc_compare_ax)
         remove_axes_box(sc_compare_ax)
-        ad_panel_number(sc_compare_ax, ["D", "E", "F", "G"][i_output])
+        ad_panel_number(sc_compare_ax, ["D", "E", "F"][i_output])
 
-
-
+    rp_ax = fig.add_subplot(inner_grid[3, 0])
+    plot_rp_vs_school_closures(rp_ax, uncertainty_dfs, iso3)
+    format_date_axis(rp_ax)
+    remove_axes_box(rp_ax)
+    ad_panel_number(rp_ax, "G")
 
     # RIGHT Column
     outer_cell = outer[0, 2]

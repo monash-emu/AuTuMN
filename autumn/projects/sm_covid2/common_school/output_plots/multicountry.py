@@ -27,7 +27,8 @@ BOX_COLORS= {
 ANALYSIS_COLORS = {
     "main": "black",
     "increased_hh_contacts": "firebrick",
-    "no_google_mobility": "mediumblue"
+    "no_google_mobility": "mediumblue",
+    "mistry": "darkgreen"
 }
 
 ANALYSIS_TITLES = {
@@ -109,12 +110,13 @@ def plot_multic_relative_outputs(output_dfs_dict: dict[str, pd.DataFrame], req_o
 
 def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_averted_relative"):
 
-   sas = ['main', 'no_google_mobility', 'increased_hh_contacts']
+   sas = ['main', 'no_google_mobility', 'increased_hh_contacts', 'mistry']
    
    sa_short_title = {
       "main": "Base-case",
       "no_google_mobility": "SA1: No Google mobility",
-      "increased_hh_contacts": "SA2: Increased hh contacts"
+      "increased_hh_contacts": "SA2: Increased hh contacts",
+      "mistry": "SA3: Using Mistry contact matrices"
    }
 
    n_countries = len(output_dfs_dict)
@@ -135,33 +137,35 @@ def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_ave
       y_max_abs = 0.
       x_ticks = []
       for i_iso3, iso3 in enumerate(iso3_sublist):
-         x_ticks.append(1. + 3 * i_iso3 + 1)
+         x_ticks.append(1. + 4 * i_iso3 + 1)
          for i_analysis, analysis in enumerate(sas):
             box_color = ANALYSIS_COLORS[analysis]
-            x = 1. + 3 * i_iso3 + i_analysis
+            x = 1. + 4 * i_iso3 + i_analysis
 
-            data = - 100. * output_dfs_dict[iso3][analysis][output] # use %. And use "-" so positive nbs indicate positive effect of closures
+            if analysis in output_dfs_dict[iso3]:
 
-            # median
-            axis.hlines(y=data.loc[0.5], xmin=x - box_width / 2. , xmax= x + box_width / 2., lw=2., color=med_color, zorder=3)    
-            
-            # IQR
-            q_75 = data.loc[0.75]
-            q_25 = data.loc[0.25]
-            rect = Rectangle(xy=(x - box_width / 2., q_25), width=box_width, height=q_75 - q_25, zorder=2, facecolor=box_color)
-            axis.add_patch(rect)
+               data = - 100. * output_dfs_dict[iso3][analysis][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
-            # 95% CI
-            q_025 = data.loc[0.025]
-            q_975 = data.loc[0.975]
-            axis.vlines(x=x, ymin=q_025 , ymax=q_975, lw=1.5, color=box_color, zorder=1)
+               # median
+               axis.hlines(y=data.loc[0.5], xmin=x - box_width / 2. , xmax= x + box_width / 2., lw=2., color=med_color, zorder=3)    
+               
+               # IQR
+               q_75 = data.loc[0.75]
+               q_25 = data.loc[0.25]
+               rect = Rectangle(xy=(x - box_width / 2., q_25), width=box_width, height=q_75 - q_25, zorder=2, facecolor=box_color)
+               axis.add_patch(rect)
 
-            y_max_abs = max(abs(q_975), y_max_abs)
-            y_max_abs = max(abs(q_025), y_max_abs)
+               # 95% CI
+               q_025 = data.loc[0.025]
+               q_975 = data.loc[0.975]
+               axis.vlines(x=x, ymin=q_025 , ymax=q_975, lw=1.5, color=box_color, zorder=1)
+
+               y_max_abs = max(abs(q_975), y_max_abs)
+               y_max_abs = max(abs(q_025), y_max_abs)
          
          axis.vlines(x=x+.5,ymin=-1.e6,ymax=1.e6, lw=1., color="black", zorder=5)
 
-      axis.set_xlim((0, 3 * n_countries_per_subplot + 1))
+      axis.set_xlim((0, 4 * n_countries_per_subplot + 1))
       axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
 
       axis.set_xticks(ticks=x_ticks, labels=iso3_sublist, rotation=90, fontsize=13)
@@ -170,13 +174,9 @@ def plot_analyses_comparison(output_dfs_dict: dict[str, dict], output="cases_ave
       axis.set_ylabel(y_label, fontsize=15)
 
       # add pseudo-legend
-      if i_subplot == 0:
-         if output == "deaths_averted_relative":
-            legend_y = 1.19 * y_max_abs
-            va = "top"
-         else:
-            legend_y = -1.15 * y_max_abs
-            va = "bottom"
+      if i_subplot == 0:         
+         legend_y = -1.15 * y_max_abs
+         va = "bottom"
          for i_analysis, analysis in enumerate(sas):
             axis.text(x=1. + i_analysis, y=legend_y, s=sa_short_title[analysis], fontsize=10, rotation=90, color=ANALYSIS_COLORS[analysis], ha="center", va=va)
 

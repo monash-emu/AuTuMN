@@ -103,26 +103,26 @@ def get_first_variant_report_date(variant: str, iso3: str, perc_threshold: float
     # For only 5 countries, data were collected manually from the CoVariants website on 28 August 2024
     covariant_data = {
         "NGA": {
-            "delta": datetime(2020, 10, 31),
-            "omicron": datetime(2020, 10, 31)
+            "delta": datetime(2021, 6, 14),
+            "omicron": datetime(2021, 11, 15)
         }, 
         "UGA": {
-            "delta": datetime(2020, 10, 31),
-            "omicron": datetime(2020, 10, 31)
+            "delta": datetime(2021, 4, 19),
+            "omicron": datetime(2021, 11, 29)
         }, 
         "AGO": {
-            "delta": datetime(2020, 10, 31),
-            "omicron": datetime(2020, 10, 31)
+            "delta": datetime(2021, 4, 19),
+            "omicron": datetime(2021, 12, 27)
         }, 
         "MOZ": {
-            "delta": datetime(2020, 10, 31),
-            "omicron": datetime(2020, 10, 31)
+            "delta": datetime(2021, 5, 3),
+            "omicron": datetime(2021, 11, 29)
         }, 
         "CMR": {
-            "delta": datetime(2020, 10, 31),
-            "omicron": datetime(2020, 10, 31)
+            "delta": datetime(2021, 5, 31),
+            "omicron": datetime(2021, 11, 1)
         }
-    }  
+    }
 
     if iso3 in covariant_data:
         return covariant_data[iso3][variant]

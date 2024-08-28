@@ -99,7 +99,34 @@ def get_strain_strat(
 
 
 def get_first_variant_report_date(variant: str, iso3: str, perc_threshold: float = 1.):
-   
+
+    # For only 5 countries, data were collected manually from the CoVariants website on 28 August 2024
+    covariant_data = {
+        "NGA": {
+            "delta": datetime(2020, 10, 31),
+            "omicron": datetime(2020, 10, 31)
+        }, 
+        "UGA": {
+            "delta": datetime(2020, 10, 31),
+            "omicron": datetime(2020, 10, 31)
+        }, 
+        "AGO": {
+            "delta": datetime(2020, 10, 31),
+            "omicron": datetime(2020, 10, 31)
+        }, 
+        "MOZ": {
+            "delta": datetime(2020, 10, 31),
+            "omicron": datetime(2020, 10, 31)
+        }, 
+        "CMR": {
+            "delta": datetime(2020, 10, 31),
+            "omicron": datetime(2020, 10, 31)
+        }
+    }  
+
+    if iso3 in covariant_data:
+        return covariant_data[iso3][variant]
+
     colname = {
         "delta": "Delta Count",
         "omicron": "Omicron Count"
@@ -152,6 +179,7 @@ def seed_vocs_using_gisaid(
             # work out seed time using gisaid data
             first_report_date = get_first_variant_report_date(voc_name, iso3)
             first_report_date_as_int = (first_report_date - COVID_BASE_DATETIME).days
+
             seed_time = first_report_date_as_int + voc_seed_params.time_from_gisaid_report
 
             entry_rate = infectious_seed / voc_seed_params.seed_duration

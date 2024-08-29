@@ -393,6 +393,10 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names, absolute=False):
     axis.text(len(output_names) + .25, ymax / 2., s="positive\neffect", color=box_color)
     axis.text(len(output_names) + .25, ymin / 2., s="negative\neffect", color=box_color)
 
+    if absolute:
+        twin_ymin, twin_ymax = twin_axis.get_ylim()
+        twin_ymax_abs = max(abs(twin_ymin), abs(twin_ymax))
+        twin_axis.set_ylim(-1.2*twin_ymax_abs, 1.2*twin_ymax_abs)
 
 
 def plot_rp_vs_school_closures(ax, uncertainty_dfs, iso3):

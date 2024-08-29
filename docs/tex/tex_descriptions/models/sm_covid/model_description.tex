@@ -33,6 +33,7 @@ and Figure \ref{fig:concept} summarises the overall approach used in our analysi
 \subsection{Transmission model}
 \label{trans} 
 \subsubsection{Compartment types and sequence}
+\label{model_structure}
 Model compartments represent sequential progressions through the processes of 
 infection with, progression through, and recovery from the phases of SARS-CoV-2
 infection and COVID-19 disease. The following types of compartments are implemented:
@@ -70,7 +71,7 @@ The base model structure consists of a sequence of one susceptible compartment (
     \label{fig:se4i4r}
 \end{figure}
 
-The main rationale for using four serial compartments for both the exposed and active states is to achieve an Erlang distribution for the time spent in each of these states. This distribution is more realistic than
+The main rationale for using multiple serial compartments for both the exposed and active states is to achieve an Erlang distribution for the time spent in each of these states. This distribution is more realistic than
 the exponential distribution which is the consequence of a single compartment assumption, because the Erlang distribution does not have a large density mass around 0 and is not heavy-tailed. Figure \ref{fig:sojourn} 
 illustrates the modelled distributions of the incubation active disease periods. 
 
@@ -86,6 +87,12 @@ illustrates the modelled distributions of the incubation active disease periods.
 The four active disease compartments all have identical characteristics. However, the last two exposed compartments ($E^3$ and $E^4$) are infectious whereas the first two ($E^1$ and $E^2$) are not. In other words, compartments 
 $E^1$ and $E^2$ represent the latent period (i.e. before infectiousness), while the full incubation period is modelled with the four compartments $E^1$-$E^4$.
  We further assume that the infectious exposed compartments ($E^3$ and $E^4$) are half as infectious as the active disease compartments.
+
+
+In a Sensitivity Analysis, we explored the impact of using alternative model structures on our main findings. Namely,
+we repeated the analyses for the three countries highlighted in the main text (Morocco, the UK and Indonesia), this time 
+considering different numbers of serial compartments to capture both incubation and active disease periods. See results in 
+Section \ref{SA_erlang}. 
 
 \subsubsection{Model stratification by age}
 \label{age}

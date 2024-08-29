@@ -317,9 +317,12 @@ def _plot_two_scenarios(axis, uncertainty_dfs, output_name, iso3, include_unc=Fa
     # plt.tight_layout()
 
 
-def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
+def _plot_diff_outputs(axis, diff_quantiles_df, output_names, absolute=False):
 
     xlab_lookup = {
+        "cases_averted": "Infections",
+        "deaths_averted": "Deaths",
+        "delta_hospital_peak": "Hospital\npressure",
         "cases_averted_relative": "Infections", 
         "deaths_averted_relative": "Deaths",
         "delta_hospital_peak_relative": "Hospital\npressure"
@@ -329,32 +332,45 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
     med_color = 'white'
     box_color= 'black'
     y_max_abs = 0.
+
+    if absolute:
+        twin_axis = axis.twinx()
+
     for i, diff_output in enumerate(output_names): 
+        if absolute and i > 0:
+            ax = twin_axis
+            box_color = 'blue'
+        else:
+            ax = axis
+            box_color = 'black'
 
-        assert diff_output.endswith("_relative"), "function only compatible with relative outputs"
+        multiplier = -1. if absolute else -100
 
-        data = - 100. * diff_quantiles_df[diff_output] # use %. And use "-" so positive nbs indicate positive effect of closures
+        data = multiplier * diff_quantiles_df[diff_output] # use %. And use "-" so positive nbs indicate positive effect of closures
         x = 1 + i
         # median
-        axis.hlines(y=data.loc[0.5], xmin=x - box_width / 2. , xmax= x + box_width / 2., lw=.8, color=med_color, zorder=3)    
+        ax.hlines(y=data.loc[0.5], xmin=x - box_width / 2. , xmax= x + box_width / 2., lw=.8, color=med_color, zorder=3)    
         
         # IQR
         q_75 = data.loc[0.75]
         q_25 = data.loc[0.25]
         rect = Rectangle(xy=(x - box_width / 2., q_25), width=box_width, height=q_75 - q_25, zorder=2, facecolor=box_color)
-        axis.add_patch(rect)
+        ax.add_patch(rect)
 
         # 95% CI
         q_025 = data.loc[0.025]
         q_975 = data.loc[0.975]
-        axis.vlines(x=x, ymin=q_025 , ymax=q_975, lw=1, color=box_color, zorder=1)
+        ax.vlines(x=x, ymin=q_025 , ymax=q_975, lw=1, color=box_color, zorder=1)
 
         y_max_abs = max(abs(q_975), y_max_abs)
         y_max_abs = max(abs(q_025), y_max_abs)
+
+        ax.tick_params(axis='y', labelcolor=box_color, color=box_color)
  
     # title = output_name if output_name not in title_lookup else title_lookup[output_name]
     
-    y_label = "% Outcome reduction"
+    prefix = "Absolute" if absolute else "%"
+    y_label = f"{prefix} reduction"
     axis.set_ylabel(y_label)
     
     labels = [xlab_lookup[o] for o in output_names]
@@ -363,6 +379,9 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
     axis.set_xlim((0.5, len(output_names) + 1))
     axis.set_ylim(-1.2*y_max_abs, 1.2*y_max_abs)
     
+    if absolute:
+        axis.vlines(x=1.5, ymin=-1.2*y_max_abs, ymax=1.2*y_max_abs, lw=0.5, linestyle='--', color='blue', zorder=1)
+
     # add coloured backgorund patches
     xmin, xmax = axis.get_xlim()
     ymin, ymax = axis.get_ylim() 
@@ -371,8 +390,8 @@ def _plot_diff_outputs(axis, diff_quantiles_df, output_names):
     rect_low = Rectangle(xy=(xmin, ymin), width=xmax - xmin, height=(ymax - ymin)/2., zorder=-1, facecolor="gainsboro")
     axis.add_patch(rect_low)
 
-    axis.text(len(output_names) + .25, ymax / 2., s="positive\neffect")
-    axis.text(len(output_names) + .25, ymin / 2., s="negative\neffect")
+    axis.text(len(output_names) + .25, ymax / 2., s="positive\neffect", color=box_color)
+    axis.text(len(output_names) + .25, ymin / 2., s="negative\neffect", color=box_color)
 
 
 
@@ -424,7 +443,7 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
         }
     )
 
-    country_name = INCLUDED_COUNTRIES['all'][iso3]
+    country_name = INCLUDED_COUNTRIES['all'][iso3] if iso3 in INCLUDED_COUNTRIES['all'] else INCLUDED_COUNTRIES['extra_AFR'][iso3]
     fig = plt.figure(figsize=(10.5, 5), dpi=300) # crete an A4 figure
     if include_country_name:
         n_outer_rows = 2
@@ -511,7 +530,7 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
         _plot_two_scenarios(sc_compare_ax, uncertainty_dfs, output, iso3, include_unc=True, include_legend=include_main_ax_legend)
         add_variant_emergence(sc_compare_ax, iso3)
 
-        if i_output == 3:
+        if i_output == 2:
             add_vacc_coverage(sc_compare_ax, uncertainty_dfs)
 
         format_date_axis(sc_compare_ax)
@@ -529,12 +548,19 @@ def make_country_highlight_figure(iso3, uncertainty_dfs, diff_quantiles_df, deri
     inner_grid = gridspec.GridSpecFromSubplotSpec(4, 1, subplot_spec=outer_cell, hspace=.3)
 
     # Now all the right panel plots for scenario comparisons
-    for i_output, output in enumerate(["cumulative_incidence", "peak_hospital_occupancy", "cumulative_infection_deaths"]): 
+    for i_output, output in enumerate(["peak_hospital_occupancy", "cumulative_infection_deaths"]): 
         boxplot_ax = fig.add_subplot(inner_grid[i_output, 0])
         plot_final_size_compare(boxplot_ax, uncertainty_dfs, output)
         remove_axes_box(boxplot_ax) 
-        ad_panel_number(boxplot_ax, ["H", "I", "J"][i_output], x=-.33)
+        ad_panel_number(boxplot_ax, ["H", "I"][i_output], x=-.33)
         
+
+    diff_outputs_abs_ax = fig.add_subplot(inner_grid[2, 0])
+    _plot_diff_outputs(diff_outputs_abs_ax, diff_quantiles_df, ["cases_averted", "deaths_averted", "delta_hospital_peak"], absolute=True)
+    remove_axes_box(diff_outputs_abs_ax)
+    ad_panel_number(diff_outputs_abs_ax, "J", x=-.27)
+
+
     diff_outputs_ax = fig.add_subplot(inner_grid[3, 0])
     _plot_diff_outputs(diff_outputs_ax, diff_quantiles_df, ["cases_averted_relative", "deaths_averted_relative", "delta_hospital_peak_relative"])
     remove_axes_box(diff_outputs_ax)
@@ -661,7 +687,7 @@ def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles
     inc_prop_strain_ax = fig.add_subplot(inner_grid[3, 0])
     plot_inc_by_strain(derived_outputs, inc_prop_strain_ax, False, legend=True)
     inc_prop_strain_ax.yaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
-    ad_panel_number(inc_prop_age_ax, "H", x=-0.25)
+    ad_panel_number(inc_prop_strain_ax, "H", x=-0.25)
 
 
     # # Bottom Left: Inc prop by strain

@@ -5,8 +5,9 @@ in the analysed countries, including school closures. The overall approach is al
 \paragraph{Reference mixing matrices}
 We extracted country-specific contact matrices using the \textit{conmat} R package which derives social mixing matrices from 
 contact survey data \cite{conmat2024,mossong-2008}. These matrices provide the average numbers of contacts per day between different age groups, disaggregated by the following 
-locations: home, school, work, other locations. In a sensitivity analysis, we repeated our estimations using alternative contact matrices provided by Mistry et al. 
-for the 25 countries in our study where these matrices were available \cite{mistry2021}.
+locations: home, school, work, other locations. In a Sensitivity Analysis, we repeated our estimations using alternative contact matrices provided by Mistry et al. 
+for the 25 countries in our study where these matrices were available \cite{mistry2021}. The results associated with these 
+additional analyses are presented in Section \ref{SA_mistry}.
 
 The pre-COVID-19 contact matrix (before adjustments for mobility changes) is calculated as the summation of the four location-specific 
 contact matrices: \(C_{0} = C_{H} + m_S C_{S} + C_{W} + C_{L}\), where \(C_{H}\), \(C_{S}\), \(C_{W}\) and \(C_{L}\) are the age-specific

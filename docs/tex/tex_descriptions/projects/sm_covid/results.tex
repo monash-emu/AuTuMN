@@ -61,19 +61,29 @@ The results of this sensitivity analysis are presented in Figure \ref{fig:SA2_re
 
 \subsection{SA3: Using alternative mixing matrices}
 \label{SA_mistry}
-NEED TO DO THIS 
-NEED TO DO THIS 
+We described our base-case approach to capturing heterogeneous mixing by age using contact matrices
+in Section \ref{mixing}. Here we used an alternative source of 
+age-specific contact matrices using Mistry et al. \cite{mistry2021}, which provides estimates for 25 of our included countries. 
 
-NEED TO DO THIS 
-NEED TO DO THIS 
-NEED TO DO THIS 
-NEED TO DO THIS 
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=1.0\textwidth]{../../../../user/rragonnet/remote_run_outputs/39126380_mistry_23Aug2024_main/COMMON_DIRECTORY/relative_outputs.pdf}
+    \end{center}
+    \caption{Relative impact of school closures on COVID-19 infections, deaths and peak hospital occupancy (SA3: using alternative contact matrices)} 
+    Results are presented as relative percentage reductions in COVID-19 infections (A), 
+    COVID-19 deaths (B), and peak hospital occupancy (C). The counterfactual ``schools open'' scenario was used as reference. 
+    Estimates are presented as medians (horizontal lines), interquartile ranges (boxes), and 95\% central credible intervals (vertical lines). 
+    Countries are listed in descending order from left to right, based on the estimated median effect for each disease indicator. See Table 1 to find the country associated with each ISO3 code. 
+    \label{fig:SA3_rel_outputs}
+\end{figure}
+
 
 
 \subsection{Output comparisons between analyses}
-In this section, we present side-by-side comparisons of the main outputs between the three analyses (Base-case, SA1 and SA2). 
+In this section, we present side-by-side comparisons of the main outputs between the four analyses (Base-case, SA1, SA2 and SA3). 
 We present comparisons for the effect of school closures on infections (Figure \ref{fig:compare_infections}), deaths (Figure \ref{fig:compare_deaths}) and peak hospital occupancy (Figure \ref{fig:compare_hosp}).\\
-Finally, Figure \ref{fig:compare_median} provides overall comparisons across all countries analysed, considering the estimated median effects alone.
+Finally, Figure \ref{fig:compare_median} provides overall comparisons across all countries analysed, considering the estimated median effects alone for the analyses covering all included countries (Base-case, SA1 and SA2).
 
 \begin{figure}[!ht]
     \begin{center}
@@ -163,7 +173,6 @@ Figures \ref{fig_erlang_MAR}, \ref{fig_erlang_IDN} and \ref{fig_erlang_GBR} pres
 results obtained between the different approaches.
 
 \begin{figure}[ht]
-    \label{fig_erlang_MAR}
     \centering
     \subfigure[2 incubations + 2 active disease compartments]{
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256918_k2_28Aug2024_main/MAR/highlights_maintext_MAR.pdf}
@@ -175,10 +184,10 @@ results obtained between the different approaches.
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256884_k6_28Aug2024_main/MAR/highlights_maintext_MAR.pdf}
     }
     \caption{Comparison of Morocco model outputs for different numbers of incubation and active disease compartments.}
+    \label{fig_erlang_MAR}
 \end{figure}
 
 \begin{figure}[ht]
-    \label{fig_erlang_IDN}
     \centering
     \subfigure[2 incubations + 2 active disease compartments]{
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256918_k2_28Aug2024_main/IDN/highlights_maintext_IDN.pdf}
@@ -190,10 +199,10 @@ results obtained between the different approaches.
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256884_k6_28Aug2024_main/IDN/highlights_maintext_IDN.pdf}
     }
     \caption{Comparison of India model outputs for different numbers of incubation and active disease compartments.}
+    \label{fig_erlang_IDN}
 \end{figure}
 
 \begin{figure}[ht]
-    \label{fig_erlang_GBR}
     \centering
     \subfigure[2 incubations + 2 active disease compartments]{
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256918_k2_28Aug2024_main/GBR/highlights_maintext_GBR.pdf}
@@ -205,6 +214,7 @@ results obtained between the different approaches.
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256884_k6_28Aug2024_main/GBR/highlights_maintext_GBR.pdf}
     }
     \caption{Comparison of UK model outputs for different numbers of incubation and active disease compartments.}
+\label{fig_erlang_GBR}
 \end{figure}
 
 
@@ -215,7 +225,7 @@ results obtained between the different approaches.
 \section{Detailed country-specific results}
 The next pages include detailed country-specific results for the 74 countries included in 
 our analysis, under the base-case configuration. Detailed country-specific results associated
-with the two sensitivity analyses (SA1 and SA2) are \textcolor{blue}{\textbf{\href{https://github.com/monash-emu/AuTuMN/tree/autumn_stripmodules/docs/school_closures_country_profiles}{available online}}}.
+with Sensitivity Analyses SA1, SA2 and SA3 are \textcolor{blue}{\textbf{\href{https://github.com/monash-emu/AuTuMN/tree/autumn_stripmodules/docs/school_closures_country_profiles}{available online}}}.
 
 You can access any country's outputs under the base-case configuration by clicking on the relevant country's name below:\\
 
@@ -230,4 +240,4 @@ You can access any country's outputs under the base-case configuration by clicki
 %     \textcolor{blue}{\hyperlink{profiles.\x}{\pgfmathparse{\countrynames[\x]}\pgfmathresult} } \tab 
 % }
 
-% \includepdf[pages=-,nup=1x2,frame=true,link=true,linkname=profiles, delta=20mm 20mm]{../../../../user/rragonnet/remote_run_outputs/33489767_test_full_analysis_24Jan2024_main/COMMON_DIRECTORY/multi_highlights.pdf}
+% \includepdf[pages=-,nup=1x2,frame=true,link=true,linkname=profiles, delta=20mm 20mm]{../../../../user/rragonnet/remote_run_outputs/33489767_test_full_analysis_24Jan2024_main/COMMON_DIRECTORY/multi_highlights_redone.pdf}

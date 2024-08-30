@@ -538,3 +538,80 @@ def make_icer_like_plot(output_dfs_dict: dict[str, pd.DataFrame], output="deaths
 
     return fig
 
+
+
+
+
+
+x_vars_labs = {
+    "prop_kids": "% under 15 years old"
+}
+
+def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative", x_var="prop_kids"):
+
+    plt.rcParams["font.family"] = "Times New Roman"    
+    fig, axis = plt.subplots(1, 1, figsize=(10, 5))    
+
+    this_iso3_list = list(output_dfs_dict.keys())
+    x_max = 0.
+    x_min = 1.e12
+    for iso3 in this_iso3_list:
+       x_val = add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var)
+       x_max = max(x_max, x_val)
+       x_min = min(x_min, x_val)
+
+    axis.hlines(y=0, xmin=x_min, xmax=x_max, color="grey", ls="--", lw=.8)
+   #  axis.set_xlim((x_min, x_max))
+    axis.spines['top'].set_visible(False)
+    axis.spines['right'].set_visible(False)
+    	
+    labels_fs = 13
+    axis.set_xlabel(x_vars_labs[x_var], fontsize = labels_fs)
+    axis.set_ylabel(YLAB_LOOKUP_SPLIT[output].replace("<br>", " "), fontsize = labels_fs)
+
+    leg_handles = [Line2D([0], [0], label=name, marker='o', markersize=7, 
+         markeredgecolor=color, markerfacecolor=color, linestyle='') for name, color in continent_colors.items()]
+    axis.legend(handles=leg_handles)
+
+    return fig
+
+
+from autumn.models.sm_covid2.inputs import get_population_by_agegroup
+
+def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
+
+    if x_var == 'prop_kids':
+           # Get country population by age-group
+       age_pops = pd.Series(
+          get_population_by_agegroup([0, 15], iso3, 2020), index=[0, 15]
+       ) 
+       x_val = 100. * age_pops.loc[0] / age_pops.sum()
+    
+    data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
+
+    country_info = pc.country_alpha3_to_country_alpha2(iso3)
+    continent_code = pc.country_alpha2_to_continent_code(country_info)
+    continent_name = pc.convert_continent_code_to_continent_name(continent_code)
+	# median
+    axis.plot(x_val, data.loc[0.5], zorder=3, marker="o", color=continent_colors[continent_name], ms=5)    
+    # IQR
+    q_75 = data.loc[0.75]
+    q_25 = data.loc[0.25]
+    axis.vlines(x=x_val, ymin=q_25 , ymax=q_75, lw=0.5, color=continent_colors[continent_name], zorder=1)
+
+    annotate = True    
+
+    if annotate:
+        xytext = [-4, 0]
+        if iso3 in manual_label_shift:
+            xytext[0] += manual_label_shift[iso3][0]
+            xytext[1] += manual_label_shift[iso3][1]
+
+        axis.annotate(
+			iso3, 
+			(x_val, data.loc[0.5]), 
+			xytext=xytext, 
+			textcoords="offset points", va="center", ha="right", fontsize=8,zorder=100
+		)
+
+    return x_val

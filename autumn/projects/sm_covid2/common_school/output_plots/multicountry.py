@@ -544,7 +544,13 @@ def make_icer_like_plot(output_dfs_dict: dict[str, pd.DataFrame], output="deaths
 
 
 x_vars_labs = {
-    "prop_kids": "% under 15 years old"
+    "prop_kids": "% under 15 years old",
+    "prop_elderly": "% above 70 years old",
+
+    "stringency": "Average Oxford Stringency index during school closures",
+    "prop_students": "% of population enrolled in schools",
+
+    "n_weeks_closed": "n weeks schools closed"
 }
 
 def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative", x_var="prop_kids"):
@@ -555,10 +561,15 @@ def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output
     this_iso3_list = list(output_dfs_dict.keys())
     x_max = 0.
     x_min = 1.e12
-    for iso3 in this_iso3_list:
-       x_val = add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var)
+    correlation_df =pd.DataFrame(columns=['iso3', 'x_val', 'median_effect'])
+    for i, iso3 in enumerate(this_iso3_list):
+       x_val, median_effect = add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var)
+       correlation_df.loc[i] = [iso3, x_val, median_effect]
+       
        x_max = max(x_max, x_val)
        x_min = min(x_min, x_val)
+
+
 
     axis.hlines(y=0, xmin=x_min, xmax=x_max, color="grey", ls="--", lw=.8)
    #  axis.set_xlim((x_min, x_max))
@@ -573,10 +584,53 @@ def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output
          markeredgecolor=color, markerfacecolor=color, linestyle='') for name, color in continent_colors.items()]
     axis.legend(handles=leg_handles)
 
-    return fig
+    return fig, correlation_df
 
 
 from autumn.models.sm_covid2.inputs import get_population_by_agegroup
+from autumn.settings import DATA_PATH
+stringency_data = pd.read_csv(DATA_PATH / "inputs" / "school-closure" / "OxCGRT_compact_national_v1.csv")
+from autumn.models.sm_covid2.model import get_unesco_data
+
+def get_mean_stringency_index(iso3):
+    df = stringency_data[stringency_data['CountryCode'] == iso3]
+    df['date'] = pd.to_datetime(df['Date'].astype(str), format='%Y%m%d')
+    filtered_data = df[(df['date'] >= "2020-01-01") & (df['date'] <= "2022-12-31")]
+    
+    unesco_data = get_unesco_data(iso3)
+    unesco_data['date'] = pd.to_datetime(unesco_data['date'].astype(str), format='%Y-%m-%d')
+    merged_df = pd.merge(filtered_data, unesco_data, on='date', how='inner')
+ 
+    df = merged_df[merged_df['status'].isin(['Partially open', 'Closed due to COVID-19'])]
+   #  df = merged_df[merged_df['status'].isin(['Closed due to COVID-19'])]
+
+
+    # calculate average stringency without school component
+    ind_dict = {
+      # 'C1M_School closing': 'C1M_Flag',
+      'C2M_Workplace closing': 'C2M_Flag',
+      'C3M_Cancel public events':'C3M_Flag',
+      'C4M_Restrictions on gatherings':'C4M_Flag',
+      'C5M_Close public transport': 'C5M_Flag',
+      'C6M_Stay at home requirements':'C6M_Flag',
+      'C7M_Restrictions on internal movement': 'C7M_Flag',
+      'C8EV_International travel controls' : 0,
+      'H1_Public information campaigns': 'H1_Flag'
+    }
+    cols_to_sum = []
+    for k,v in ind_dict.items():
+       if v != 0:
+          value = (df[k]-0.5*(1-df[v]))/df[k].max()*100
+       else:
+          value = df[k]/df[k].max()*100
+       colname = f"{k}_indicator"
+       df[colname] = value
+       cols_to_sum.append(colname)
+    df['Stringency_I']= df[cols_to_sum].sum(axis=1) / len(ind_dict)
+
+    return df['Stringency_I'].mean()
+
+
 
 def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
 
@@ -586,7 +640,28 @@ def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
           get_population_by_agegroup([0, 15], iso3, 2020), index=[0, 15]
        ) 
        x_val = 100. * age_pops.loc[0] / age_pops.sum()
-    
+    if x_var == 'prop_elderly':
+           # Get country population by age-group
+       age_pops = pd.Series(
+          get_population_by_agegroup([0, 70], iso3, 2020), index=[0, 70]
+       ) 
+       x_val = 100. * age_pops.loc[70] / age_pops.sum()      
+    elif x_var == 'stringency':
+       x_val = get_mean_stringency_index(iso3)
+    elif x_var == "prop_students":
+       total_pop = pd.Series(
+           get_population_by_agegroup([0, 15], iso3, 2020), index=[0, 15]
+       ).sum()
+
+       unesco_data = get_unesco_data(iso3)
+       n_students = unesco_data['enrolment_(pre-primary_to_upper_secondary)'].max()
+        
+       x_val = 100. * n_students / total_pop
+    elif x_var == "n_weeks_closed":
+       unesco_data = get_unesco_data(iso3)
+       x_val = get_n_weeks_closed(unesco_data)
+
+
     data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
     country_info = pc.country_alpha3_to_country_alpha2(iso3)
@@ -614,4 +689,4 @@ def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
 			textcoords="offset points", va="center", ha="right", fontsize=8,zorder=100
 		)
 
-    return x_val
+    return x_val, data.loc[0.5]

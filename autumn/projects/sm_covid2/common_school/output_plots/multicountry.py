@@ -553,10 +553,9 @@ x_vars_labs = {
     "n_weeks_closed": "n weeks schools closed"
 }
 
-def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative", x_var="prop_kids"):
+def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output="deaths_averted_relative", x_var="prop_kids", axis=None, legend=True):
 
     plt.rcParams["font.family"] = "Times New Roman"    
-    fig, axis = plt.subplots(1, 1, figsize=(10, 5))    
 
     this_iso3_list = list(output_dfs_dict.keys())
     x_max = 0.
@@ -580,11 +579,12 @@ def make_icer_like_plot_generic(output_dfs_dict: dict[str, pd.DataFrame], output
     axis.set_xlabel(x_vars_labs[x_var], fontsize = labels_fs)
     axis.set_ylabel(YLAB_LOOKUP_SPLIT[output].replace("<br>", " "), fontsize = labels_fs)
 
-    leg_handles = [Line2D([0], [0], label=name, marker='o', markersize=7, 
-         markeredgecolor=color, markerfacecolor=color, linestyle='') for name, color in continent_colors.items()]
-    axis.legend(handles=leg_handles)
+    if legend:
+      leg_handles = [Line2D([0], [0], label=name, marker='o', markersize=7, 
+            markeredgecolor=color, markerfacecolor=color, linestyle='') for name, color in continent_colors.items()]
+      axis.legend(handles=leg_handles)
 
-    return fig, correlation_df
+    return correlation_df
 
 
 from autumn.models.sm_covid2.inputs import get_population_by_agegroup
@@ -632,8 +632,7 @@ def get_mean_stringency_index(iso3):
 
 
 
-def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
-
+def get_pop_characteristics(iso3, x_var):
     if x_var == 'prop_kids':
            # Get country population by age-group
        age_pops = pd.Series(
@@ -661,6 +660,11 @@ def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
        unesco_data = get_unesco_data(iso3)
        x_val = get_n_weeks_closed(unesco_data)
 
+    return x_val
+
+def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
+
+    x_val = get_pop_characteristics(iso3, x_var)
 
     data = - 100. * output_dfs_dict[iso3][output] # use %. And use "-" so positive nbs indicate positive effect of closures
 
@@ -674,7 +678,7 @@ def add_icer_dots_generic(iso3, output_dfs_dict, output, axis, x_var):
     q_25 = data.loc[0.25]
     axis.vlines(x=x_val, ymin=q_25 , ymax=q_75, lw=0.5, color=continent_colors[continent_name], zorder=1)
 
-    annotate = True    
+    annotate = False    
 
     if annotate:
         xytext = [-4, 0]

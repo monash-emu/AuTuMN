@@ -1,0 +1,202 @@
+
+We observed significant heterogeneity in the estimated effects of school closures on SARS-CoV-2 infections and 
+COVID-19 deaths. In this section, we explore potential sources of this heterogeneity by examining the 
+relationships between the estimated effects of school closures and key country-specific factors, 
+including demographics and the non-pharmaceutical interventions in place during the study period. 
+
+First, we evaluated the correlation between the estimated effects of school closures on infections and deaths, and the following factors:
+\begin{itemize}
+    \item proportion of individuals aged under 15 years old, 
+    \item proportion of individuals aged 70 years old and above,
+    \item proportion of enrolled students in the population,
+    \item total duration of school closure,
+    \item average stringency of PHSMs other than school closures implemented during school closures.
+\end{itemize}
+
+Table \ref{tab:correlation} presents the correlation between each of these factors and the 
+estimated effect of school closures on infections and deaths. 
+
+\begin{table}[!ht]
+    \begin{center}
+    \begin{tabular}{|p{9cm}|p{3.5cm}|p{3.5cm}|}
+    \hline
+    \textbf{Correlation} & \textbf{Intervention effect on SARS-CoV-2 infections} & \textbf{Intervention effect on COVID-19 deaths} \\
+    \hline
+    N weeks of schools closures & 0.43 & 0.33 \\
+    Average Oxford Stringency index during school closures & -0.18 & -0.20 \\
+    \% of population under 15 years old (year 2020) & 0.46 & 0.31 \\
+    \% of population enrolled in schools (year 2020) & 0.44 & 0.34 \\
+    \% of population above 70 years old (year 2020) & -0.54 & -0.39 \\
+    \hline
+    \end{tabular}
+\end{center}
+    % \end{adjustbox}
+    \caption{Correlation between various factors and the estimated intervention effect on SARS-CoV-2 infections and COVID-19 deaths}
+    \label{tab:correlation}
+\end{table}
+
+Based on these univariate correlation coefficients, we observe that school closures may have more beneficial effects on 
+infections and deaths in settings that exhibit one or more of the following characteristics:
+\begin{enumerate}
+    \item a large proportion of individuals aged under 15, 
+    \item a large proportion of enrolled students,
+    \item less stringent PHSMs (other than school closures) during school periods
+    \item a small proportion of individuals aged 70 and above
+    \item a longer total duration of school closures
+\end{enumerate}
+
+It is important to note that calculating the correlation coefficients constitute a crude approach that was only used as a first step in our explorations. The following sections present how we calculated the variables associated with each of these factors and 
+their detailed relationships with the estimated effect of school closures on infections and deaths, respectively.
+
+\subsection{Proportion of individuals aged under 15 years old}
+The proportion of individuals aged under 15 years old was calculated from the population age distributions
+reported by the United Nations' Population Division for year 2020. 
+
+Figure \ref{fig:hetero_kids} presents how the estimated effects of school closures on infections and deaths varied 
+with the proportion of individuals aged under 15.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/hetero_prop_kids.pdf}
+    \end{center}
+    \caption{Relationship between school closure impact on infections (top panel) and deaths (bottom panel), and 
+    proportion of individuals aged under 15 years old. Intervention effects are presented as median (dots) and ranges (bars), 
+    with colours indicating the continents to which the countries belong.} 
+    \label{fig:hetero_kids}
+\end{figure}
+
+
+\subsection{Proportion of individuals aged 70 years old and above}
+The proportion of individuals aged 70 years old and above was calculated from the population age distributions
+reported by the United Nations' Population Division for year 2020. 
+
+Figure \ref{fig:hetero_elderly} presents how the estimated effects of school closures on infections and deaths varied 
+with the proportion of individuals aged 70 and above.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/hetero_prop_elderly.pdf}
+    \end{center}
+    \caption{Relationship between school closure impact on infections (top panel) and deaths (bottom panel), and 
+    proportion of individuals aged 70 years old and over. Intervention effects are presented as median (dots) and ranges (bars), 
+    with colours indicating the continents to which the countries belong.} 
+    \label{fig:hetero_elderly}
+\end{figure}
+
+
+\subsection{Proportion of enrolled students}
+For each country, the total number of enrolled students was obtained from the UNESCO database on school closures
+for year 2020. The proportion of enrolled students was then obtained by dividing the number of enrolled students 
+by the total population size reported by the United Nations' Population Division for year 2020.
+
+Figure \ref{fig:hetero_students} presents how the estimated effects of school closures on infections and deaths varied 
+with the proportion of enrolled students in the population.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/hetero_prop_students.pdf}
+    \end{center}
+    \caption{Relationship between school closure impact on infections (top panel) and deaths (bottom panel), and 
+    proportion of students in the population. Intervention effects are presented as median (dots) and ranges (bars), 
+    with colours indicating the continents to which the countries belong.} 
+    \label{fig:hetero_students}
+\end{figure}
+
+
+\subsection{Total duration of school closures}
+The total duration of school closures was calculated using the UNESCO school closure database. 
+The total number of school closure weeks was calculated by adding the number of weeks fully closed, 
+and the number of weeks partially closed multiplied by 0.3 (our midpoint estimate for assumed attendance 
+fraction during partial closures).
+
+Figure \ref{fig:hetero_duration} presents how the estimated effects of school closures on infections and deaths varied 
+with the total duration of school closures. Note that the bottom panel of Figure \ref{fig:hetero_duration} 
+presents the same data as Figure 2 in the main text.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/hetero_n_weeks_closed.pdf}
+    \end{center}
+    \caption{Relationship between school closure impact on infections (top panel) and deaths (bottom panel), and 
+    total duration of school closures. Intervention effects are presented as median (dots) and ranges (bars), 
+    with colours indicating the continents to which the countries belong.} 
+    \label{fig:hetero_duration}
+\end{figure}
+
+
+\subsection{Average PHSM stringency index}
+We used stringency index data from The Oxford Covid-19 Government Response Tracker (OxCGRT) to inform our calculations
+of the average stringency index. Namely, we used the same approach as that used by 
+OxCGRT to compute their \textit{StringencyIndex\_Average} index, but we excluded the school closure
+component from the calculations. Thus, the resulting average stringency index reflects the total 
+extent to which PHSMs other than school closures were implemented in each country. A higher 
+value of the index indicates a higher PHSM stringency level.
+
+Figure \ref{fig:hetero_stringency} presents how the estimated effects of school closures on infections and deaths varied 
+with the average stringency index for PHSMs other than school closures.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/hetero_stringency.pdf}
+    \end{center}
+    \caption{Relationship between school closure impact on infections (top panel) and deaths (bottom panel), and 
+    average stringency of PHSMs other than school closures. Intervention effects are presented as median (dots) and ranges (bars), 
+    with colours indicating the continents to which the countries belong.} 
+    \label{fig:hetero_stringency}
+\end{figure}
+
+
+\subsection{Multivariate analysis}
+In order to account for potential confounding, we performed a multivariate analysis to further explore
+the heterogeneity observed in the estimated effects of school closures on infections and deaths.
+
+First, we noted that some of the factors investigated in the previous sections were dependent. In particular,
+three factors were directly relevant to the age-structure of the population and therefore highly dependent: proportion under 15 years old, proportion 70 years and above, and proportion of students. We 
+used a causal directed acyclic graph (cDAG) to better represent these dependencies in the context of our intervention
+effects estimations (Figure \ref{fig:cDAG}).
+
+\begin{figure}[!ht]
+    \begin{center}
+    \includegraphics[width=0.5\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/cDAG.jpg}
+    \end{center}
+    \caption{Simple causal directed acyclic graph (cDAG) for the effect of school closures on SARS-Cov-2 
+    infections and distal outcome COVID-19 deaths. This cDAG informed the construction of a simple linear model 
+    examining this effect. Green circle=main exposure of interest, Blue circles=outcomes of interest, Boxes=adjusted confounding covariates. PHSMs = public health and social measures.} 
+    \label{fig:cDAG}
+\end{figure}
+
+The cDAG supports including three factors in a multilinear model: the population age structure, 
+the total duration of school closures, and the stringency of PHSMs other than 
+school closures. Among the factors related to population age structure, the correlation coefficients suggest that 
+the proportion of individuals aged 70 and above may have the strongest relationship with the estimated effects of 
+school closures. Consequently, we incorporated the following three variables into our multilinear regression analysis:
+\begin{itemize}
+    \item proportion of individuals aged 70 years old and above,
+    \item total duration of school closure,
+    \item average stringency of PHSMs other than school closures implemented during school closures.
+\end{itemize}
+
+Figure \ref{fig:multireg} presents the results of the multilinear regression.
+
+\begin{figure}[!ht]
+    \centering
+    \subfigure[]{
+        \includegraphics[width=0.8\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/linreg_infections.png}
+        \label{fig:reg_inf}
+    }
+    \\ % Line break to stack the images vertically
+    \subfigure[]{
+        \includegraphics[width=0.8\textwidth]{../../../../user/rragonnet/remote_run_outputs/heterogeneity_plots/linreg_deaths.png}
+        \label{fig:reg_death}
+    }
+    \caption{Results of the multilinear regression exploring the relationship between different population factors and the effects of school closures
+    on infections (panel a) and deaths (panel b). The factors are: the proportion of individuals aged 70 years old and above (\textit{prop\_elderly}), 
+    the average stringency of PHSMs other than school closures implemented during the school closures (\textit{stringency}), 
+    and the total duration of school closures (\textit{n\_weeks\_closed}).
+    }
+    \label{fig:multireg}
+\end{figure}
+
+The proportion of elderly was found to be the only statistically significant predictor (p-value $\leq 0.05$) of the effect of school closures
+on infections and deaths. This suggests that settings exhibiting a higher proportion of elderly individuals are less likely to benefit from
+school closures in terms of both number of infections and deaths. The other two factors were not found to be significantly associated with the outcome variables.

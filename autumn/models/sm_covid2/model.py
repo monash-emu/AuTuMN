@@ -91,7 +91,11 @@ def process_unesco_data(params: Parameters):
     """
 
     unesco_data = get_unesco_data(params.country.iso3)
-
+    
+    # OVERWRITE SCHOOL STATUS FOR SENSITIVITY ANALYSIS
+    assert params.country.iso3 == 'IDN'
+    unesco_data['status'].loc[(pd.to_datetime(unesco_data['date']) >= "Jan 2021") & (pd.to_datetime(unesco_data['date']) < "Jan 2022") & (unesco_data['status'] == "Partially open")] = "Closed due to COVID-19"
+    
     # remove rows with identical closure status to make dataframe lighter
     def map_func(key):
         return ['Fully open', 'Partially open', 'Closed due to COVID-19', 'Academic break'].index(key)

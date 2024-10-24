@@ -346,16 +346,16 @@ def run_full_analysis(
     """
      --> Dump post-full-runs data and final figure 
     """
-    for attempt in range(n_io_retries):
-        try:
-            for scenario, unc_df in unc_dfs.items():
-                unc_df.to_parquet(out_path / f"uncertainty_df_{scenario}.parquet")
-            diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
-            # Make multi-panel figure
-            make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
-            break
-        except:
-            sleep(1)
+    # for attempt in range(n_io_retries):
+    #     try:
+    for scenario, unc_df in unc_dfs.items():
+        unc_df.to_parquet(out_path / f"uncertainty_df_{scenario}.parquet")
+    diff_quantiles_df.to_parquet(out_path / "diff_quantiles_df.parquet")
+    # Make multi-panel figure
+    make_country_output_tiling(iso3, unc_dfs, diff_quantiles_df, output_folder)
+        #     break
+        # except:
+        #     sleep(1)
 
     return idata, unc_dfs, diff_quantiles_df
 

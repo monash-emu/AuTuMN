@@ -8,6 +8,7 @@ import multiprocessing as mp
 import sys
 from pathlib import Path
 from time import time
+import arviz as az
 
 ANALYSIS = 'main'  # ["main", "no_google_mobility", "increased_hh_contacts"]
 RUN_CONFIG = DEFAULT_RUN_CONFIG
@@ -33,6 +34,9 @@ if __name__ == "__main__":
     country_output_dir = analysis_output_dir / iso3
     country_output_dir.mkdir(exist_ok=True)
 
-    _, _, _ = run_full_analysis(iso3, ANALYSIS, RUN_CONFIG, country_output_dir)
+
+    idata = az.from_netcdf(output_root_dir / "idata.nc")
+
+    _, _, _ = run_full_analysis(iso3, ANALYSIS, RUN_CONFIG, country_output_dir, idata=idata)
     
     print(f"Finished in {time() - start_time} seconds", flush=True)

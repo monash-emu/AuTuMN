@@ -174,7 +174,7 @@ def get_uncertainty_dfs(full_runs, quantiles=[.025, .25, .5, .75, .975]):
     unc_dfs = {}
     for scenario in full_runs:
         unc_df = esamp.quantiles_for_results(full_runs[scenario].results, quantiles)
-        unc_df.columns.set_levels([str(q) for q in unc_df.columns.levels[1]], level=1, inplace=True)  # to avoid using floats as column names (not parquet-compatible)
+        unc_df = unc_df.columns.set_levels([str(q) for q in unc_df.columns.levels[1]], level=1)  # to avoid using floats as column names (not parquet-compatible)
         unc_dfs[scenario] = unc_df
 
     return unc_dfs
@@ -216,7 +216,8 @@ def run_full_analysis(
     analysis: str = "main",
     run_config: dict = DEFAULT_RUN_CONFIG,
     output_folder="test_outputs",
-    logger=None
+    logger=None,
+    idata=None
 ):
     n_io_retries = 5  # how many times should we retry to write outputs to the disk (prevent crash due to random I/O error)
     start_time = time()
@@ -224,105 +225,107 @@ def run_full_analysis(
     out_path = Path(output_folder)
     assert run_config['n_chains'] <= run_config['n_opti_searches']
 
-    # Create BayesianCompartmentalModel object
-    bcm = get_bcm_object(iso3, analysis)
+    if idata is None:
 
-    """ 
-        OPTIMISATION
-    """
-    # Sample optimisation starting points with LHS
-    custom_print(logger, "Perform LHS sampling")
-    lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
-    lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
+        # Create BayesianCompartmentalModel object
+        bcm = get_bcm_object(iso3, analysis)
 
-    # Perform optimisation searches
-    custom_print(logger, f"Perform optimisation ({run_config['n_opti_searches']} searches)")
-    n_opti_workers = 8
-    def opti_func(sample_dict):
-        suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
-        best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=suggested_start)
-        return best_p
+        """ 
+            OPTIMISATION
+        """
+        # Sample optimisation starting points with LHS
+        custom_print(logger, "Perform LHS sampling")
+        lhs_samples = bcm.sample.lhs(run_config['n_opti_searches'])
+        lhs_samples_as_dicts = lhs_samples.convert("list_of_dicts")
 
-    best_params = map_parallel(opti_func, lhs_samples_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
-    opti_end = time()
-    custom_print(logger, f"... optimisation completed in {round(opti_end - start_time)} seconds.")
+        # Perform optimisation searches
+        custom_print(logger, f"Perform optimisation ({run_config['n_opti_searches']} searches)")
+        n_opti_workers = 8
+        def opti_func(sample_dict):
+            suggested_start = {p: v for p, v in sample_dict.items() if p != 'random_process.delta_values'}
+            best_p, _ = optimise_model_fit(bcm, num_workers=n_opti_workers, search_iterations=run_config['opti_budget'], suggested_start=suggested_start)
+            return best_p
 
-    # Keep only n_chains best solutions and plot optimised fits
-    best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
-    lle, results = best_outputs.extras, best_outputs.results
-    retained_indices = lle.sort_values("loglikelihood", ascending=False).index[0:run_config['n_chains']].to_list()    
-    retained_best_params = [best_params[i] for i in retained_indices]
-    retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
-    retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
-    
-    # Calculate MLE derived outputs
-    mle_params = retained_best_params[0]   
-    derived_outputs = {}
-    for sc in ["baseline", "scenario_1"]:
-        sc_bcm = get_bcm_object(iso3, analysis=analysis, scenario=sc)
-        res = esamp.model_results_for_samples([mle_params], sc_bcm)
-        derived_outputs[sc] = res.results.xs(0, level="sample", axis=1)
+        best_params = map_parallel(opti_func, lhs_samples_as_dicts, n_workers=int(2 * run_config['n_cores'] / n_opti_workers))  # oversubscribing
+        opti_end = time()
+        custom_print(logger, f"... optimisation completed in {round(opti_end - start_time)} seconds.")
 
-    """ 
-     --> Dump optimisation-related files and make associated plots
-    """
-    for attempt in range(n_io_retries):
-        try:
-            # Store starting points
-            with open(out_path / "LHS_init_points.yml", "w") as f:
-                yaml.dump(lhs_samples_as_dicts, f)
-            # Store optimal solutions
-            with open(out_path / "best_params.yml", "w") as f:
-                yaml.dump(best_params, f)
-            # Store retained optimal solutions
-            with open(out_path / "retained_best_params.yml", "w") as f:
-                yaml.dump(retained_best_params, f)
+        # Keep only n_chains best solutions and plot optimised fits
+        best_outputs = esamp.model_results_for_samples(best_params, bcm, include_extras=True)
+        lle, results = best_outputs.extras, best_outputs.results
+        retained_indices = lle.sort_values("loglikelihood", ascending=False).index[0:run_config['n_chains']].to_list()    
+        retained_best_params = [best_params[i] for i in retained_indices]
+        retained_init_points = [lhs_samples_as_dicts[i] for i in retained_indices]
+        retained_results = results.loc[:, pd.IndexSlice[results.columns.get_level_values(1).isin(retained_indices), :]]
+        
+        # Calculate MLE derived outputs
+        mle_params = retained_best_params[0]   
+        derived_outputs = {}
+        for sc in ["baseline", "scenario_1"]:
+            sc_bcm = get_bcm_object(iso3, analysis=analysis, scenario=sc)
+            res = esamp.model_results_for_samples([mle_params], sc_bcm)
+            derived_outputs[sc] = res.results.xs(0, level="sample", axis=1)
+
+        """ 
+        --> Dump optimisation-related files and make associated plots
+        """
+        for attempt in range(n_io_retries):
+            try:
+                # Store starting points
+                with open(out_path / "LHS_init_points.yml", "w") as f:
+                    yaml.dump(lhs_samples_as_dicts, f)
+                # Store optimal solutions
+                with open(out_path / "best_params.yml", "w") as f:
+                    yaml.dump(best_params, f)
+                # Store retained optimal solutions
+                with open(out_path / "retained_best_params.yml", "w") as f:
+                    yaml.dump(retained_best_params, f)
 
 
-            with open(out_path / "derived_outputs.pickle", "wb") as f:
-                pickle.dump(derived_outputs, f)
+                with open(out_path / "derived_outputs.pickle", "wb") as f:
+                    pickle.dump(derived_outputs, f)
 
-            # Plot optimal solutions and matching starting points
-            plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
-            # Plot optimised model fits on a same figure
-            plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
+                # Plot optimal solutions and matching starting points
+                plot_opti_params(retained_init_points, retained_best_params, bcm, output_folder)
+                # Plot optimised model fits on a same figure
+                plot_model_fits(retained_results, bcm, out_path / "optimal_fits.png")
 
-            break
-        except:
-            sleep(1)
-    
+                break
+            except:
+                sleep(1)
+        
 
-    # Early return if MCMC not requested
-    if run_config['metropolis_draws'] == 0:
-        return None, None, None
+        # Early return if MCMC not requested
+        if run_config['metropolis_draws'] == 0:
+            return None, None, None
 
-    """ 
-        MCMC
-    """
-    custom_print(logger, f"Start MCMC for {run_config['metropolis_tune']} + {run_config['metropolis_draws']} iterations and {run_config['n_chains']} chains...")
-    n_repeat_seed = 1
-    init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
-    init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
-    idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])  
-    custom_print(logger, "... MCMC completed")
+        """ 
+            MCMC
+        """
+        custom_print(logger, f"Start MCMC for {run_config['metropolis_tune']} + {run_config['metropolis_draws']} iterations and {run_config['n_chains']} chains...")
+        n_repeat_seed = 1
+        init_vals = [[best_p] * n_repeat_seed for i, best_p in enumerate(retained_best_params)]     
+        init_vals = [p_dict for sublist in init_vals for p_dict in sublist]  
+        idata = sample_with_pymc(bcm, initvals=init_vals, draws=run_config['metropolis_draws'], tune=run_config['metropolis_tune'], cores=run_config['n_cores'], chains=run_config['n_chains'], method=run_config['metropolis_method'])  
+        custom_print(logger, "... MCMC completed")
 
-    custom_print(logger, "Computing likelihood values...")
-    burnt_idata = idata.sel(draw=range(run_config['burn_in'], idata.sample_stats.sizes['draw']))   
-    lle = esamp.likelihood_extras_for_idata(burnt_idata, bcm)
-    custom_print(logger, "... likelihood values computed.")
+        custom_print(logger, "Computing likelihood values...")
+        burnt_idata = idata.sel(draw=range(run_config['burn_in'], idata.sample_stats.sizes['draw']))   
+        lle = esamp.likelihood_extras_for_idata(burnt_idata, bcm)
+        custom_print(logger, "... likelihood values computed.")
 
-    
-    """
-     --> Dump MCMC output data and make post-MCMC plots
-    """
-    for attempt in range(n_io_retries):
-        try:
-            idata.to_netcdf(out_path / "idata.nc")
-            lle.to_csv(out_path / f"lle_{iso3}_{analysis}.csv")
-            make_post_mc_plots(idata, run_config['burn_in'], output_folder)
-            break
-        except:
-            sleep(1)
+        
+        """
+        --> Dump MCMC output data and make post-MCMC plots
+        """
+        for attempt in range(n_io_retries):
+            try:
+                idata.to_netcdf(out_path / "idata.nc")
+                lle.to_csv(out_path / f"lle_{iso3}_{analysis}.csv")
+                make_post_mc_plots(idata, run_config['burn_in'], output_folder)
+                break
+            except:
+                sleep(1)
 
     """ 
         Post-MCMC processes

@@ -174,7 +174,7 @@ def get_uncertainty_dfs(full_runs, quantiles=[.025, .25, .5, .75, .975]):
     unc_dfs = {}
     for scenario in full_runs:
         unc_df = esamp.quantiles_for_results(full_runs[scenario].results, quantiles)
-        unc_df = unc_df.columns.set_levels([str(q) for q in unc_df.columns.levels[1]], level=1)  # to avoid using floats as column names (not parquet-compatible)
+        unc_df.columns = unc_df.columns.set_levels([str(q) for q in unc_df.columns.levels[1]], level=1)  # to avoid using floats as column names (not parquet-compatible)
         unc_dfs[scenario] = unc_df
 
     return unc_dfs

@@ -36,21 +36,29 @@ def _add_school_closure_patches(ax, iso3, scenario, school_colors=SCHOOL_COLORS,
     closed_dates = data[data['status'] == "Closed due to COVID-19"]['date'].to_list()
     academic_dates = data[data['status'] == "Academic break"]['date'].to_list()
     
+    partial_dates_in_2021 = [p for p in partial_dates if p.year == 2021]
+
     partial_dates_str = [d.strftime("%Y-%m-%d") for d in partial_dates] 
     closed_dates_str = [d.strftime("%Y-%m-%d") for d in closed_dates] 
     academic_dates_str = [d.strftime("%Y-%m-%d") for d in academic_dates] 
+
+    partial_dates_in_2021_str = [d.strftime("%Y-%m-%d") for d in partial_dates_in_2021]
 
     plot_ymin, plot_ymax = ax.get_ylim()
     ymin = plot_ymin + ymin_asprop * (plot_ymax - plot_ymin)
     ymax = plot_ymin + ymax_asprop * (plot_ymax - plot_ymin)
 
-    if scenario == 'baseline':
-        ax.vlines(partial_dates_str,ymin=ymin, ymax=ymax, lw=1, alpha=1., color=school_colors['partial'], zorder = 1)
-        ax.vlines(closed_dates_str, ymin=ymin, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
     ax.vlines(academic_dates_str,ymin=ymin, ymax=ymax, lw=1, alpha=1., color=school_colors['academic'], zorder = 1)
 
+    # if scenario == 'baseline':
+    ax.vlines(partial_dates_str,ymin=ymin, ymax=ymax, lw=1, alpha=1., color=school_colors['partial'], zorder = 1)
+    ax.vlines(closed_dates_str, ymin=ymin, ymax=ymax, lw=1, alpha=1, color=school_colors['full'], zorder = 1)
+
+    if scenario == "scenario_1":
+        ax.vlines(partial_dates_in_2021_str, ymin=ymin, ymax=ymax, lw=1, alpha=1., color=school_colors['full'], zorder = 1)
+
     plot_xmin, plot_xmax = ax.get_xlim()
-    ax.text(x=plot_xmin + 0.015 * (plot_xmax - plot_xmin), y=ymin - (plot_ymax - plot_ymin) * .02, s=txt, size=6, va="bottom", ha="left")
+    ax.text(x=plot_xmin + 0.01 * (plot_xmax - plot_xmin), y=ymin - (plot_ymax - plot_ymin) * .02, s=txt, size=9, va="bottom", ha="left")
 
 def add_variant_emergence(ax, iso3):
     linestyles = {"delta": "dashed", "omicron": "dotted"}
@@ -288,14 +296,14 @@ def _plot_two_scenarios(axis, uncertainty_dfs, output_name, iso3, include_unc=Fa
             )
             ymax = max(ymax, df['0.75'].max())
         else:
-            ymax = median_df.max()
+            ymax = max(ymax, median_df.max())
 
         axis.plot(time, median_df, color=colour, label=label, lw=1.)
         
     plot_ymax = ymax * 1.2    
 
-    _add_school_closure_patches(axis, iso3, "baseline", ymin_asprop=1.095, ymax_asprop=1.2, txt="historic.")
-    _add_school_closure_patches(axis, iso3, "scenario_1", ymin_asprop=.8, ymax_asprop=.85, txt= "counterfac.")
+    _add_school_closure_patches(axis, iso3, "baseline", ymin_asprop=1.05, ymax_asprop=1.1, txt='historical')
+    _add_school_closure_patches(axis, iso3, "scenario_1", ymin_asprop=.85, ymax_asprop=.9, txt= "counterfactual")
 
     # axis.tick_params(axis="x", labelrotation=45)
     title = output_name if output_name not in title_lookup else title_lookup[output_name]

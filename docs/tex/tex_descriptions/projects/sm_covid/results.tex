@@ -204,7 +204,7 @@ results obtained between the different approaches.
     \subfigure[6 incubations + 6 active disease compartments]{
         \includegraphics[width=0.31\textwidth]{../../../../user/rragonnet/remote_run_outputs/39256884_k6_28Aug2024_main/IDN/highlights_maintext_IDN.pdf}
     }
-    \caption{Comparison of India model outputs for different numbers of incubation and active disease compartments.}
+    \caption{Comparison of Indonesia model outputs for different numbers of incubation and active disease compartments.}
     \label{fig_erlang_IDN}
 \end{figure}
 
@@ -222,6 +222,86 @@ results obtained between the different approaches.
     \caption{Comparison of UK model outputs for different numbers of incubation and active disease compartments.}
 \label{fig_erlang_GBR}
 \end{figure}
+
+
+
+\subsection{Exploring more stringent school closures during the Delta wave in Indonesia}
+\label{SA_delta_closures}
+Indonesia experienced its largest COVID-19 wave in the second half of 2021, following the emergence of the Delta variant earlier that year. During 2021, schools in the country were partially closed outside of regular academic breaks. In this additional analysis, we explore a counterfactual scenario in which schools would have been fully closed throughout 2021, to assess whether a more stringent closure policy might have resulted in a lower COVID-19 burden.
+
+Figures \ref{fig_delta_closures} and \ref{fig_delta_closures_unc} display the results of this analysis, comparing COVID-19 mortality rates and cumulative infection proportions under both the historical scenario and the counterfactual scenario with more stringent school closures.
+
+\begin{figure}[ht]
+    \begin{center}
+    \includegraphics[width=0.75\textwidth]{../../../../notebooks/user/rragonnet/project_specific/School_Closure/delta_closures_sa_median.pdf}
+    \end{center}
+    \caption{Median estimated COVID-19 mortality (panel A) and cumulative infection proportion (panel B) in Indonesia, 
+    under both the historical scenario and the counterfactual scenario with more stringent school closures.
+    School closure statuses are illustrated with the horizontal coloured bands (dark grey: fully closed for COVID-19, light grey: partially closed due to COVID-19, purple: academic break)
+    } 
+    \label{fig_delta_closures}
+\end{figure}
+
+\begin{figure}[ht]
+    \begin{center}
+    \includegraphics[width=0.75\textwidth]{../../../../notebooks/user/rragonnet/project_specific/School_Closure/delta_closures_sa_unc.pdf}
+    \end{center}
+    \caption{Estimated COVID-19 mortality (panel A) and cumulative infection proportion (panel B) in Indonesia, 
+    under both the historical scenario and the counterfactual scenario with more stringent school closures, including uncertainty.
+    Shaded areas represent interquartile ranges and solid lines represent median estimates.
+    School closure statuses are illustrated with the horizontal coloured bands (dark grey: fully closed for COVID-19, light grey: partially closed due to COVID-19, purple: academic break)
+    } 
+    \label{fig_delta_closures_unc}
+\end{figure}
+
+
+
+\section{Posterior samples exploration}
+In this section we present the parameter posterior distributions alongside prior distribution density plots, 
+as well as pairwise plots of posterior samples for the three analyses highlighted in the main text (Morocco, Indonesia, and the United Kingdom).
+These visualisations provide a detailed overview of the parameter estimates and enable a comparison between prior beliefs and posterior results for each country.
+
+The combined prior and posterior distribution plots allow for a direct comparison of the parameter estimates with the assumed priors, 
+revealing how the data have influenced the posterior beliefs in each analysis (Figures \ref{fig_posteriors_MAR}--\ref{fig_posteriors_GBR}). 
+The pairwise plots of posterior samples display the interactions between pairs of parameters, highlighting potential correlations or dependencies that may exist within the parameters across each regional dataset.
+
+\begin{figure}[ht]
+    \centering
+    \subfigure[Prior and posterior distributions of main epidemiological parameters]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/MAR_posteriors.png}
+    }
+    \subfigure[Pairwise comparison]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/MAR_pairs.png}
+    }
+    \caption{Parameter posterior distributions and pairwise comparison for Morocco.}
+\label{fig_posteriors_MAR}
+\end{figure}
+
+
+\begin{figure}[ht]
+    \centering
+    \subfigure[Prior and posterior distributions of main epidemiological parameters]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/IDN_posteriors.png}
+    }
+    \subfigure[Pairwise comparison]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/IDN_pairs.png}
+    }
+    \caption{Parameter posterior distributions and pairwise comparison for Indonesia.}
+\label{fig_posteriors_IDN}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \subfigure[Prior and posterior distributions of main epidemiological parameters]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/GBR_posteriors.png}
+    }
+    \subfigure[Pairwise comparison]{
+        \includegraphics[width=0.7\textwidth]{../../../../user/rragonnet/remote_run_outputs/posterior_plots/GBR_pairs.png}
+    }
+    \caption{Parameter posterior distributions and pairwise comparison for the UK.}
+\label{fig_posteriors_GBR}
+\end{figure}
+
 
 
 

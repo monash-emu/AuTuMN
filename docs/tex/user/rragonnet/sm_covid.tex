@@ -23,14 +23,17 @@
 \usepackage{subfigure}
 \usepackage{adjustbox}
 
+\usepackage{alphalph}
+
 \usepackage{tikz, lmodern}
 \usetikzlibrary{calc,tikzmark}
 
 \renewcommand{\thechapter}{\Alph{chapter}}
 \renewcommand{\chaptername}{Part}
+\renewcommand{\figurename}{Fig}
 
-\renewcommand{\thefigure}{S\arabic{figure}}
-\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{\AlphAlph{\value{figure}}}
+\renewcommand{\thetable}{\Alph{table}}
 
 % code below is to add a new sectioning level (e.g. 2.1.3.4)
 % this new level will be requested using the \paragraph{} command

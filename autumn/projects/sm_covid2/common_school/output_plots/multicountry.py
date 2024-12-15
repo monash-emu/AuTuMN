@@ -416,7 +416,7 @@ continent_colors = {
 	"South America": "orangered",
 	"North America": "slateblue",
     "Africa": "cornflowerblue",
-	"Oceania": "orange",	
+	"Australia": "orange",	
 }
 
 manual_label_shift = {
@@ -466,6 +466,10 @@ def add_icer_dots(unesco_data, iso3, output_dfs_dict, output, axis, censored_xra
     country_info = pc.country_alpha3_to_country_alpha2(iso3)
     continent_code = pc.country_alpha2_to_continent_code(country_info)
     continent_name = pc.convert_continent_code_to_continent_name(continent_code)
+
+    if continent_name == "Oceania":
+       continent_name = "Australia"
+
 	# median
     axis.plot(n_weeks_effectively_closed, data.loc[0.5], zorder=3, marker="o", color=continent_colors[continent_name], ms=5)    
     # IQR

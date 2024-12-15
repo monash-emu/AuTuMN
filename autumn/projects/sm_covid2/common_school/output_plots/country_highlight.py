@@ -608,7 +608,7 @@ def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles
     )
 
     country_name = INCLUDED_COUNTRIES['all'][iso3]
-    fig = plt.figure(figsize=(6, 5), dpi=300)
+    fig = plt.figure(figsize=(6.5, 5), dpi=300)
     if include_country_name:
         n_outer_rows = 2
         height_ratios = [3, 97]
@@ -634,7 +634,7 @@ def make_country_highlight_maintext_figure(iso3, uncertainty_dfs, diff_quantiles
         ax1.spines['left'].set_visible(False)
 
     outer = gridspec.GridSpecFromSubplotSpec(
-        1, 2, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.33, width_ratios=(70, 30)
+        1, 2, subplot_spec=super_outer[n_outer_rows - 1, 0], wspace=.45, width_ratios=(70, 30)
     )    
 
     # LEFT column

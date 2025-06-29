@@ -12,15 +12,16 @@
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
 
-summerepi==3.6.2
-summerepi2==1.0.3
-
+summerepi==3.6.4
+#summerepi2==1.0.3
+computegraph
 
 # Jax for Windows (summer2 requirement)
 # Linux/OSX already installed via computegraph
--f https://whls.blob.core.windows.net/unstable/index.html
-jax[cpu]===0.3.14; sys_platform == 'win32'
-
+#-f https://whls.blob.core.windows.net/unstable/index.html
+#jax[cpu]===0.3.14; sys_platform == 'win32'
+#jax==0.3.14
+#jaxlib==0.3.14
 # Interaction
 jupyterlab==3.2.0
 jupyterlab_templates
@@ -41,15 +42,15 @@ pyDOE
 numba
 scipy==1.8.1
 networkx
-numpyro==0.10.1
+#numpyro==0.10.1
 
 # Database access
 SQLAlchemy==1.4.46
 pyarrow
 
 # Utility
-pyyaml
-pydantic
+pyyaml==5.3.1
+pydantic==1.1.0
 pyAesCrypt
 googledrivedownloader
 statsmodels
@@ -72,10 +73,10 @@ pre-commit
 nbstripout
 
 # AWS / buildkite infrastructure
-boto3==1.21.29
+#boto3==1.21.29
 timeago
 click
 tabulate
-awscli==1.22.84
-fabric
-s3fs==0.4.2
+#awscli==1.22.84
+#fabric
+#s3fs==0.4.2

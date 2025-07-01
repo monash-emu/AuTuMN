@@ -227,8 +227,8 @@ def scale_up_function(
     # Ensure that every element of x is unique.
     assert len(x) == len(set(x)), "There are duplicate values in x."
 
-    x = np.array(x, dtype=np.float)
-    y = np.array(y, dtype=np.float)
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
 
     # Ensure that the arrays are ordered
     order = x.argsort()

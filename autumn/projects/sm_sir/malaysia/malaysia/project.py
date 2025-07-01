@@ -3,7 +3,7 @@ import json
 from autumn.core.project import Project, ParameterSet, load_timeseries, build_rel_path,\
     get_all_available_scenario_paths
 from autumn.calibration import Calibration
-from autumn.calibration.priors import UniformPrior
+from autumn.calibration.priors import UniformPrior, TruncNormalPrior
 from autumn.calibration.targets import NormalTarget
 from autumn.models.sm_sir import base_params, build_model
 from autumn.settings import Region, Models
@@ -40,7 +40,7 @@ targets = [
 priors = [
     UniformPrior("contact_rate", (0.01, 0.1)),
     UniformPrior("detect_prop", (0.07, 0.3)),
-    UniformPrior("sojourns.latent.total_time", (5, 20)),
+    TruncNormalPrior("sojourns.latent.total_time", 5.5, 0.25, (3.0, 8.0)),
     UniformPrior("voc_emergence.delta.contact_rate_multiplier", (1.5, 3)),
     UniformPrior("voc_emergence.delta.new_voc_seed.start_time", (400, 500)),
     UniformPrior("voc_emergence.omicron.contact_rate_multiplier", (2, 3.5)),

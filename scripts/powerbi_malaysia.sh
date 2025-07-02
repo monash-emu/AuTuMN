@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=malaysia_autumn_cal
+#SBATCH --job-name=malaysia_autumn_powerbi
 #SBATCH --account=sh30
 
 #SBATCH --time=03:00:00
@@ -14,5 +14,5 @@ cd /projects/sh30/users/dshipman/AuTuMN
 
 conda activate malaysia310
 
-python scripts/calibrate_malaysia.py
+python scripts/powerbi_malaysia.py
 

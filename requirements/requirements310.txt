@@ -12,14 +12,14 @@
 # - scipy
 # https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
 
-summerepi==3.6.2
-summerepi2==1.0.3
+summerepi==3.6.4
+#summerepi2==1.0.3
 
 
 # Jax for Windows (summer2 requirement)
 # Linux/OSX already installed via computegraph
--f https://whls.blob.core.windows.net/unstable/index.html
-jax[cpu]===0.3.14; sys_platform == 'win32'
+#-f https://whls.blob.core.windows.net/unstable/index.html
+#jax[cpu]===0.3.14; sys_platform == 'win32'
 
 # Interaction
 jupyterlab==3.2.0
@@ -42,6 +42,7 @@ numba
 scipy==1.8.1
 networkx
 numpyro==0.10.1
+computegraph==0.2.2
 
 # Database access
 SQLAlchemy==1.4.46
@@ -49,7 +50,7 @@ pyarrow
 
 # Utility
 pyyaml
-pydantic
+pydantic==1.1.0
 pyAesCrypt
 googledrivedownloader
 statsmodels

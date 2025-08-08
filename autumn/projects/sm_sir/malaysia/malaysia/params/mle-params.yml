@@ -1,14 +1,29 @@
-contact_rate: 0.0829153759716996
-detect_prop: 0.0838119462983362
-immunity_stratification.infection_risk_reduction.high: 0.7044689276229313
-immunity_stratification.infection_risk_reduction.low: 0.5014152393824144
-mobility.lockdown_1_mobility: 0.7692423638726259
-mobility.lockdown_2_mobility: 0.9672315903479806
-sojourns.latent.total_time: 17.90089260059743
-sojourns.recovered: 339.48419695340766
-voc_emergence.delta.contact_rate_multiplier: 2.0617973719447082
-voc_emergence.delta.new_voc_seed.start_time: 403.23195426134515
-voc_emergence.omicron.contact_rate_multiplier: 2.4910654227618525
-voc_emergence.omicron.new_voc_seed.start_time: 593.0728962889484
-voc_emergence.omicron.relative_active_period: 1.3370657144505769
-voc_emergence.omicron.relative_latency: 0.5469061781696967
+#contact_rate: 0.04098573227664979
+#detect_prop: 0.08411294254964266
+#immunity_stratification.infection_risk_reduction.high: 0.7044689276229313
+#immunity_stratification.infection_risk_reduction.low: 0.5014152393824144
+#mobility.lockdown_1_mobility: 0.7692423638726259
+#mobility.lockdown_2_mobility: 0.9672315903479806
+#sojourns.latent.total_time: 7.5 #17.90089260059743
+#sojourns.recovered: 339.48419695340766
+#voc_emergence.delta.contact_rate_multiplier: 2.0617973719447082
+#voc_emergence.delta.new_voc_seed.start_time: 403.23195426134515
+#voc_emergence.omicron.contact_rate_multiplier: 2.4910654227618525
+#voc_emergence.omicron.new_voc_seed.start_time: 593.0728962889484
+#voc_emergence.omicron.relative_active_period: 1.3370657144505769
+#voc_emergence.omicron.relative_latency: 0.5469061781696967
+
+{'contact_rate': 0.04098573227664979,
+ 'detect_prop': 0.08411294254964266,
+ 'sojourns.latent.total_time': 5.040086953791027,
+ 'voc_emergence.delta.contact_rate_multiplier': 2.0538762641588275,
+ 'voc_emergence.delta.new_voc_seed.start_time': 403.81917739619837,
+ 'voc_emergence.omicron.contact_rate_multiplier': 2.436438533243819,
+ 'voc_emergence.omicron.new_voc_seed.start_time': 593.7080836686878,
+ 'voc_emergence.omicron.relative_latency': 0.5461564622297974,
+ 'voc_emergence.omicron.relative_active_period': 1.3349554223149263,
+ 'sojourns.recovered': 342.91797878220825,
+ 'immunity_stratification.infection_risk_reduction.low': 0.5011428332781903,
+ 'immunity_stratification.infection_risk_reduction.high': 0.7085461532775488,
+ 'mobility.lockdown_2_mobility': 0.9691778686127893,
+ 'mobility.lockdown_1_mobility': 0.883563213945227}

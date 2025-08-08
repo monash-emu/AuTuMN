@@ -18,7 +18,7 @@ import pandas as pd
 import yaml
 from autumn.core.db.database import FeatherDatabase
 
-from summer2.model import CompartmentalModel as CompartmentalModel2
+# from summer2.model import CompartmentalModel as CompartmentalModel2
 
 from autumn.core.db.store import (
     Table,
@@ -117,7 +117,10 @@ class Project:
             if not p["param_name"].startswith("random_process")
         ]
         if any(
-            [p["param_name"].startswith("random_process.delta_values") for p in calibration.all_priors]
+            [
+                p["param_name"].startswith("random_process.delta_values")
+                for p in calibration.all_priors
+            ]
         ):
             self._cal_params.append("random_process.delta_values")
 
@@ -148,13 +151,8 @@ class Project:
             if derived_outputs_whitelist:
                 # Only calculate required derived outputs.
                 model.set_derived_outputs_whitelist(derived_outputs_whitelist)
-            if isinstance(model, CompartmentalModel2):
-                self._model = model
-                self._runner = self._initialize_model(model, params_dict, True)
-                return self._runner.model
-            else:
-                model.run()
-                return model
+            model.run()
+            return model
         else:
             pdict_exp = expand_nested_dict(params_dict)
             self._runner.run(pdict_exp)
@@ -176,36 +174,21 @@ class Project:
         models = []
         assert baseline_model.outputs is not None, "Baseline model has not been run yet."
 
-        if isinstance(baseline_model, CompartmentalModel2):
-            if self._scenario_models is None:
-                self._scenario_models = {}
-                for model_idx, params in enumerate(scenario_params):
-                    params_dict = params.to_dict()
-                    model = self.build_model(params_dict, None)
-                    if model.times[0] != baseline_model.times[0]:
-                        raise ValueError("Scenario start times must match baseline start times")
-                    runner = self._initialize_model(model, params_dict, False)
-                    self._scenario_models[model_idx] = runner
-            for model_idx, params in enumerate(scenario_params):
-                pdict_exp = expand_nested_dict(params.to_dict())
-                self._scenario_models[model_idx].run(pdict_exp)
-                models.append(self._scenario_models[model_idx].model)
-        else:
-            for model_idx, (params, build_opt) in enumerate(zip(scenario_params, build_options)):
+        for model_idx, (params, build_opt) in enumerate(zip(scenario_params, build_options)):
 
-                params_dict = params.to_dict()
+            params_dict = params.to_dict()
 
-                model = self.build_model(params_dict, build_opt)
+            model = self.build_model(params_dict, build_opt)
 
-                if model.times[0] != baseline_model.times[0]:
-                    raise ValueError("Scenario start times must match baseline start times")
+            if model.times[0] != baseline_model.times[0]:
+                raise ValueError("Scenario start times must match baseline start times")
 
-                self._run_model(model)
-                models.append(model)
+            self._run_model(model)
+            models.append(model)
 
         return models
 
-    def _initialize_model(self, model: CompartmentalModel2, params_dict, run=True):
+    def _initialize_model(self, model: CompartmentalModel, params_dict, run=True):
         model.finalize()
         pdict_filt = {
             k: v

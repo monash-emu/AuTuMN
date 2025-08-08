@@ -13,9 +13,9 @@ sojourns:
     total_time: 7.75
     proportion_early: 0.333
   latent:
-    total_time: 4.
+    total_time: 5.
     proportion_early: 0.5
-  recovered: 180.
+  recovered: 250.
 
 time:
   start: 367. #jan 01, 2021
@@ -23,7 +23,7 @@ time:
 
 activate_random_process: False
 
-contact_rate: 0.165
+contact_rate: 0.043
 infectious_seed: 10000.
 
 immunity_stratification:
@@ -83,7 +83,7 @@ voc_emergence:
     starting_strain: false
     seed_prop: 0.
     new_voc_seed:
-      start_time: 580.
+      start_time: 630.
       entry_rate: 10.
       seed_duration: 1.
     contact_rate_multiplier: 1.

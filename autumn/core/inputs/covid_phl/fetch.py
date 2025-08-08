@@ -2,11 +2,13 @@
 This file imports testing data from google drive and saves it to disk as a CSV.
 See Readme.md \data\inputs\covid_phl on how to update DATA_URL
 """
+
 import os
 from pathlib import Path
 
 from autumn.settings import INPUT_DATA_PATH
-from google_drive_downloader import GoogleDriveDownloader as gdd
+
+# from google_drive_downloader import GoogleDriveDownloader as gdd
 
 INPUT_DATA_PATH = Path(INPUT_DATA_PATH)
 
